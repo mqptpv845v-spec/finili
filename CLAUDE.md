@@ -7,14 +7,14 @@ Finali: a tool for Nordic ad production. **Briefd** (`/briefd`) turns Excel medi
 ## Commands
 
 ```bash
-npm run dev        # dev server (or: specific dev)
+npm run check      # typecheck + lint + tests — THE done-gate, run this
 npm run build      # production build — must stay green
-npm test           # Vitest — must stay green
-npm run lint       # ESLint — zero errors and zero warnings
-npm run typecheck  # tsc --noEmit
+npm run dev        # dev server (or: specific dev)
 ```
 
-Run build + test + lint before declaring any change done.
+**Nothing is "done" until `npm run check` and `npm run build` both pass.** Fix failures yourself. GitHub CI (`.github/workflows/ci.yml`) runs the same gates on every push.
+
+The design rules are mechanically enforced: `tests/design-rules.test.ts` fails the suite on raw hex colors, shadows, scaling hovers, uppercase, monospace, off-scale Briefd sizes, files over 5 MB, and junk paths. When it fails, fix the code — never weaken or delete the test. Human workflow guide: `docs/contributing.md`.
 
 ## Infrastructure
 

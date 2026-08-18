@@ -4,7 +4,7 @@ interface CropFrameProps {
   children: React.ReactNode;
   id?: string;
   className?: string;
-  markColor?: string; // CSS color string (e.g. "#000000", "#84CCEF", "#FFADEB")
+  markColor?: string; // CSS color (default per design rule 4: pure black; use token colors like var(--color-cyan))
   markLength?: number; // length of crop mark lines in px (default: 12, follows 4px grid)
   markThickness?: number; // thickness in px (default: 0.5)
   gap?: number; // offset gap from corner vertex in px (default: 4, lines never touch)
@@ -21,7 +21,7 @@ export const CropFrame: React.FC<CropFrameProps> = ({
   children,
   id,
   className = "",
-  markColor = "#000000",
+  markColor = "black",
   markLength = 12,
   markThickness = 0.5,
   gap = 4,

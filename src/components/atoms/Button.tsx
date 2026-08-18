@@ -5,7 +5,7 @@ import Link from "next/link";
 
 // The signature Finali button: sharp box that morphs to a pill on hover
 // (.btn-morph in globals.css). Flat and sharp — no shadows, no scaling,
-// no uppercase (design rules 2, 3 and the .gemini/rules set).
+// no capitalized-only text (design rules 2, 3 and the .gemini/rules set).
 type ButtonVariant = "solid" | "contrast" | "soft" | "outline";
 type ButtonSize = "sm" | "md" | "lg";
 

@@ -35,7 +35,8 @@ Open http://127.0.0.1:3000 — the marketing page is at `/`, the Briefd app at `
 | ------------------- | ------------------------------------- |
 | `npm run dev`       | Dev server (Turbopack)                |
 | `npm run build`     | Production build                      |
-| `npm test`          | Vitest unit tests                     |
+| `npm run check`     | Typecheck + lint + tests (the done-gate) |
+| `npm test`          | Vitest unit tests + design-rule enforcement |
 | `npm run lint`      | ESLint                                |
 | `npm run typecheck` | TypeScript, no emit                   |
 | `specific dev`      | Local dev environment via Specific    |
@@ -57,4 +58,4 @@ docs/source-material/   Raw publisher spec material (orders, spec sheets)
 
 ## Design system
 
-The visual language is strict and documented in [docs/design-system.md](docs/design-system.md): Instrument Sans only, tone-on-tone color pairs, crop marks, a 4px grid, and a golden-ratio type scale on Briefd. The rules are enforced through design tokens in `src/app/globals.css` and the shared atoms — never use raw hex colors or ad-hoc font sizes in components.
+The visual language is strict and documented in [docs/design-system.md](docs/design-system.md): Instrument Sans only, tone-on-tone color pairs, crop marks, a 4px grid, and a golden-ratio type scale on Briefd. The rules are enforced through design tokens in `src/app/globals.css` and the shared atoms — never use raw hex colors or ad-hoc font sizes in components. These rules are enforced by `tests/design-rules.test.ts` and CI — see [docs/contributing.md](docs/contributing.md) for the workflow.
