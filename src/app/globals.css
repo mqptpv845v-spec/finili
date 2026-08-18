@@ -1,19 +1,33 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
+
+/* ==========================================================================
+   DESIGN TOKENS (Tailwind v4 theme)
+   The only allowed brand colors (TYPOGRAPHY_RULES.md rule 7, tone-on-tone):
+   petrol/cyan, plum/magenta, taupe/yellow, graphite/light.
+   Use the token utilities (bg-plum, text-magenta, ...) — never raw hex.
+   The Briefd golden-ratio type scale (rule 9): hero/section/title/value/label.
+   ========================================================================== */
+@theme {
+  --color-petrol: #173537;
+  --color-cyan: #84CCEF;
+  --color-plum: #520037;
+  --color-magenta: #FFADEB;
+  --color-taupe: #7C705A;
+  --color-yellow: #FFFFA8;
+  --color-graphite: #191A1C;
+  --color-light: #F5F5F5;
+
+  --text-hero: 78px;
+  --text-section: 48px;
+  --text-title: 30px;
+  --text-value: 18px;
+  --text-label: 11px;
+}
 
 @layer base {
   :root {
-    /* ==========================================================================
-       1. FÄRGSYSTEM (Brand Color Tokens)
-       ========================================================================== */
     --color-bg: #FFFFFF;
     --color-text: #191A1C;
-    --color-petrol: #173537;
-    --color-plum: #520037;
-    --color-cyan: #84CCEF;
-    --color-taupe: #7C705A;
-    --color-magenta: #FFADEB;
-    --color-yellow: #FFFFA8;
 
     /* ==========================================================================
        2. TYPOGRAFISYSTEM & STORLEKAR (Ändra storlekar direkt här!)
@@ -62,7 +76,8 @@
   body {
     background-color: var(--color-bg);
     color: var(--color-text);
-    font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    /* --font-instrument-sans is provided by next/font in layout.tsx */
+    font-family: var(--font-instrument-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     margin: 0;
     padding: 0;
     -webkit-font-smoothing: antialiased;

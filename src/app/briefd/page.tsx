@@ -1,10 +1,13 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import { useState, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CropFrame } from "@/components/CropFrame";
-import { FormatCardItem, FormatData } from "@/components/briefd/FormatCardItem";
+import { CropFrame } from "@/components/atoms/CropFrame";
+import { Button } from "@/components/atoms/Button";
+import type { FormatData } from "@/lib/briefd/types";
+import { CATEGORIES, CATEGORY_ORDER } from "@/lib/briefd/categories";
+import { FormatCardItem } from "@/components/briefd/FormatCardItem";
 import { BriefdSidebar } from "@/components/briefd/BriefdSidebar";
 import { FormatDetailView } from "@/components/briefd/FormatDetailView";
 import { BriefdCalendarView } from "@/components/briefd/BriefdCalendarView";
@@ -381,60 +384,16 @@ const CAMPAIGN_FORMATS: FormatData[] = [
   }
 ];
 
-const SECTIONS = [
-  {
-    number: "01",
-    id: "some",
-    title: "Social Media (SoMe)",
-    category: "Social Media (SoMe)",
-    formats: CAMPAIGN_FORMATS.filter(f => f.sectionCategory === "Social Media (SoMe)"),
-    description: "Meta, Snapchat & LinkedIn stories, feed and video formats",
-    sectionBg: "bg-[#7C705A]",
-    titleColor: "text-[#FFFFA8]",
-    descColor: "text-[#FFFFA8]/80",
-    badgeBorder: "border-[#FFFFA8]/40 text-[#FFFFA8]",
-    dividerColor: "border-[#FFFFA8]/20"
-  },
-  {
-    number: "02",
-    id: "display",
-    title: "Digital Banners",
-    category: "Digital Display & High-Impact",
-    formats: CAMPAIGN_FORMATS.filter(f => f.sectionCategory === "Digital Display & High-Impact"),
-    description: "Programmatic, desktop panorama and mobile topscroll",
-    sectionBg: "bg-[#520037]",
-    titleColor: "text-[#FFADEB]",
-    descColor: "text-[#FFADEB]/80",
-    badgeBorder: "border-[#FFADEB]/40 text-[#FFADEB]",
-    dividerColor: "border-[#FFADEB]/20"
-  },
-  {
-    number: "03",
-    id: "ooh",
-    title: "Out of Home (OOH)",
-    category: "Out of Home (OOH & DOOH)",
-    formats: CAMPAIGN_FORMATS.filter(f => f.sectionCategory === "Out of Home (OOH & DOOH)"),
-    description: "Classic printed outdoor placements and digital series",
-    sectionBg: "bg-[#173537]",
-    titleColor: "text-[#84CCEF]",
-    descColor: "text-[#84CCEF]/80",
-    badgeBorder: "border-[#84CCEF]/40 text-[#84CCEF]",
-    dividerColor: "border-[#84CCEF]/20"
-  },
-  {
-    number: "04",
-    id: "print",
-    title: "Printed Media",
-    category: "Newsprint & Magazines (Print)",
-    formats: CAMPAIGN_FORMATS.filter(f => f.sectionCategory === "Newsprint & Magazines (Print)"),
-    description: "Dagens industri tabloid, half page and magazine with ICC profiles",
-    sectionBg: "bg-[#191A1C]",
-    titleColor: "text-white",
-    descColor: "text-white/70",
-    badgeBorder: "border-white/30 text-white",
-    dividerColor: "border-white/20"
-  }
-];
+// Workspace sections, derived from the single category source of truth.
+const SECTIONS = CATEGORY_ORDER.map((category) => {
+  const meta = CATEGORIES[category];
+  return {
+    ...meta,
+    id: meta.key,
+    category,
+    formats: CAMPAIGN_FORMATS.filter((f) => f.sectionCategory === category),
+  };
+});
 
 function BriefdApp() {
   const router = useRouter();
@@ -482,38 +441,36 @@ function BriefdApp() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-white text-black font-sans flex flex-col justify-between selection:bg-[#FFADEB] selection:text-[#520037]">
-      
-      {/* 1. Header (Briefd: 30px, by finali: 11px, Nav: 11px — 1.618 Scale) */}
+    <div className="w-full min-h-screen bg-white text-black font-sans flex flex-col justify-between selection:bg-magenta selection:text-plum">
+
+      {/* 1. Header (Briefd: title, by finali: label, Nav: label — 1.618 Scale) */}
       <div className="w-full px-5 sm:px-[30px] pt-5">
         <CropFrame className="w-full">
           <header className="w-full flex items-center justify-between px-0 py-3 sm:py-4 bg-white">
             <Link href="/briefd" className="flex items-center gap-2 hover:opacity-80 transition-opacity text-black">
-              <span className="text-[30px] font-bold text-black tracking-tight leading-none" style={{ color: "#000000" }}>Briefd</span>
-              <span className="text-[11px] font-semibold text-black leading-none" style={{ color: "#000000" }}>(by finali)</span>
+              <span className="text-title font-bold text-black tracking-tight leading-none">Briefd</span>
+              <span className="text-label font-semibold text-black leading-none">(by finali)</span>
             </Link>
 
-            <nav className="flex items-center gap-4 text-[11px] font-semibold text-black">
+            <nav className="flex items-center gap-4 text-label font-semibold text-black">
               <Link href="/" className="hover:underline transition-opacity hidden sm:inline">
                 About us
               </Link>
               <a href="#about" className="hover:underline transition-opacity hidden sm:inline">
                 What we do
               </a>
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => setIsShareModalOpen(true)}
-                className="btn-morph flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-bold text-black border border-black/[0.15] hover:border-black cursor-pointer"
                 title="Copy zero-login share link for agency, client or freelancers"
               >
                 <Share2 className="w-3.5 h-3.5" />
                 <span>Share live brief</span>
-              </button>
-              <button
-                onClick={() => setIsFinaliModalOpen(true)}
-                className="btn-morph bg-black text-white px-4 py-2 text-[11px] font-semibold cursor-pointer"
-              >
+              </Button>
+              <Button variant="solid" size="sm" onClick={() => setIsFinaliModalOpen(true)}>
                 <span>Automate final art</span>
-              </button>
+              </Button>
             </nav>
           </header>
         </CropFrame>
@@ -522,46 +479,43 @@ function BriefdApp() {
       {/* 2. Main Content Stage */}
       <main className="w-full px-5 sm:px-[30px] py-8 flex-1 flex flex-col">
         
-        {/* VIEW 1: INITIAL DROPZONE (Hero: 78px Display / 18px Body — 1.618 Scale) */}
+        {/* VIEW 1: INITIAL DROPZONE (Hero: Display / Body — 1.618 Scale) */}
         {viewState === "dropzone" && (
           <div className="w-full max-w-4xl mx-auto py-16 flex flex-col items-center justify-center text-center gap-8">
             <div className="flex flex-col gap-3 max-w-2xl">
-              <h1 className="text-[48px] sm:text-[78px] font-bold text-black tracking-tight leading-[1.02]">
+              <h1 className="text-section sm:text-hero font-bold text-black tracking-tight leading-[1.02]">
                 Drop your spreadsheet.<br />
                 See your campaign.
               </h1>
-              <p className="text-[18px] font-medium text-black mt-2 leading-relaxed">
+              <p className="text-value font-medium text-black mt-2 leading-relaxed">
                 Translate messy media plans into clean format cards and technical specs for creative teams.
               </p>
             </div>
 
-            {/* Clickable Drop Area (30px Title / 18px Subtitle) */}
+            {/* Clickable Drop Area (Title / Subtitle) */}
             <div
               onClick={() => setViewState("loading")}
               className="w-full max-w-2xl p-12 sm:p-16 flex flex-col items-center justify-center gap-5 transition-all cursor-pointer group"
             >
-              <div className="w-16 h-16 flex items-center justify-center group-hover:scale-105 transition-transform">
+              <div className="w-16 h-16 flex items-center justify-center group-hover:opacity-70 transition-opacity">
                 <FileSpreadsheet className="w-12 h-12 text-black" />
               </div>
 
               <div className="flex flex-col gap-1">
-                <h3 className="text-[30px] font-bold text-black leading-tight">
+                <h3 className="text-title font-bold text-black leading-tight">
                   Drop your media plan here (.xlsx, .numbers)
                 </h3>
-                <p className="text-[18px] font-medium text-black">
+                <p className="text-value font-medium text-black">
                   Or click anywhere to load and test with a sample campaign
                 </p>
               </div>
 
-              <button
-                type="button"
-                className="mt-2 bg-black text-white px-8 py-3.5 text-[18px] font-bold rounded-none hover:opacity-80 transition-opacity cursor-pointer"
-              >
+              <Button variant="solid" size="lg" className="mt-2">
                 Load sample media plan: Bevero Black Friday 2026
-              </button>
+              </Button>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-6 text-[11px] font-bold text-black">
+            <div className="flex flex-wrap items-center justify-center gap-6 text-label font-bold text-black">
               <span>Supports all agency formats</span>
               <span>·</span>
               <span>Zero template restrictions</span>
@@ -601,56 +555,57 @@ function BriefdApp() {
                   <div className="inline-flex p-0.5 bg-black/[0.04] rounded-xs">
                     <button
                       onClick={() => setActiveTab("formats")}
-                      className={`px-3 py-1.5 text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer rounded-xs ${
+                      className={`px-3 py-1.5 text-label font-bold transition-all flex items-center gap-1.5 cursor-pointer rounded-xs ${
                         activeTab === "formats"
-                          ? "bg-white text-black shadow-xs"
-                          : "text-[#555555] hover:text-black"
+                          ? "bg-white text-black"
+                          : "text-black/60 hover:text-black"
                       }`}
                     >
-                      <span>Alla format ({CAMPAIGN_FORMATS.length})</span>
+                      <span>All formats ({CAMPAIGN_FORMATS.length})</span>
                     </button>
 
                     <button
                       onClick={() => setActiveTab("calendar")}
-                      className={`px-3 py-1.5 text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer rounded-xs ${
+                      className={`px-3 py-1.5 text-label font-bold transition-all flex items-center gap-1.5 cursor-pointer rounded-xs ${
                         activeTab === "calendar"
-                          ? "bg-white text-black shadow-xs"
-                          : "text-[#555555] hover:text-black"
+                          ? "bg-white text-black"
+                          : "text-black/60 hover:text-black"
                       }`}
                     >
                       <CalendarIcon className="w-3.5 h-3.5" />
-                      <span>Kalender</span>
+                      <span>Calendar</span>
                     </button>
 
                     <button
                       onClick={() => setActiveTab("table")}
-                      className={`px-3 py-1.5 text-[11px] font-bold transition-all flex items-center gap-1.5 cursor-pointer rounded-xs ${
+                      className={`px-3 py-1.5 text-label font-bold transition-all flex items-center gap-1.5 cursor-pointer rounded-xs ${
                         activeTab === "table"
-                          ? "bg-white text-black shadow-xs"
-                          : "text-[#555555] hover:text-black"
+                          ? "bg-white text-black"
+                          : "text-black/60 hover:text-black"
                       }`}
                     >
                       <TableIcon className="w-3.5 h-3.5" />
-                      <span>Kalkylark</span>
+                      <span>Spreadsheet</span>
                     </button>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <button
+                    <Button
+                      variant="soft"
+                      size="sm"
                       onClick={() => setIsShareModalOpen(true)}
-                      className="btn-morph flex items-center gap-1.5 px-3.5 py-1.5 text-[11px] font-bold text-black bg-black/[0.04] hover:bg-black/10 cursor-pointer"
                       title="Share zero-login live brief URL"
                     >
                       <Globe className="w-3.5 h-3.5 text-black" />
                       <span>Share live brief</span>
-                    </button>
+                    </Button>
 
-                    <span className="text-[11px] font-normal text-[#555555] hidden lg:inline">
-                      {activeTab === "formats" 
-                        ? `${CAMPAIGN_FORMATS.length} format i 4 kategorier` 
+                    <span className="text-label font-normal text-black/60 hidden lg:inline">
+                      {activeTab === "formats"
+                        ? `${CAMPAIGN_FORMATS.length} formats in 4 categories`
                         : activeTab === "calendar"
-                        ? "Leveransschema september 2026"
-                        : "Strukturerad medietabell med export"}
+                        ? "Delivery schedule September 2026"
+                        : "Structured media table with export"}
                     </span>
                   </div>
                 </div>
@@ -687,14 +642,14 @@ function BriefdApp() {
                       {/* Section Headline & Description Lockup (No borders, unboxed clean counter) */}
                       <div className="flex flex-col gap-1.5 pb-1">
                         <div className="flex items-baseline justify-between gap-4">
-                          <h2 className={`text-[48px] font-bold ${sec.titleColor} tracking-tight leading-none`}>
+                          <h2 className={`text-section font-bold ${sec.titleColor} tracking-tight leading-none`}>
                             {sec.title}
                           </h2>
-                          <span className={`text-[11px] font-bold ${sec.descColor} shrink-0`}>
+                          <span className={`text-label font-bold ${sec.descColor} shrink-0`}>
                             {sec.formats.length} formats
                           </span>
                         </div>
-                        <p className={`text-[11px] font-semibold ${sec.descColor} tracking-normal`}>
+                        <p className={`text-label font-semibold ${sec.descColor} tracking-normal`}>
                           {sec.description}
                         </p>
                       </div>
@@ -722,44 +677,46 @@ function BriefdApp() {
 
       </main>
 
-      {/* 3. Bottom Section: Automated Artwork Delivery (48px Headline / 18px Body) */}
+      {/* 3. Bottom Section: Automated Artwork Delivery (Section Headline / Value Body) */}
       <div className="w-full px-5 sm:px-[30px] pb-10">
-        <section className="w-full bg-[#520037] text-[#FFADEB] p-8 sm:p-12 md:p-14 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+        <section className="w-full bg-plum text-magenta p-8 sm:p-12 md:p-14 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
           <div className="flex flex-col gap-2 max-w-2xl">
-            <h3 className="text-[30px] sm:text-[48px] font-bold text-[#FFADEB] leading-tight tracking-tight">
+            <h3 className="text-title sm:text-section font-bold text-magenta leading-tight tracking-tight">
               From approved layout to {CAMPAIGN_FORMATS.length} production-ready files in seconds.
             </h3>
-            <p className="text-[18px] text-[#FFADEB] mt-2 max-w-xl leading-relaxed">
+            <p className="text-value text-magenta mt-2 max-w-xl leading-relaxed">
               Finali connects directly to your master design file and automatically exports validated PDF/X files, DOOH sequences, and social banners matching exact publisher requirements.
             </p>
           </div>
 
-          <button
+          <Button
+            variant="contrast"
+            size="lg"
             onClick={() => setIsFinaliModalOpen(true)}
-            className="btn-morph bg-[#FFADEB] text-[#520037] hover:bg-white px-8 py-4 text-[18px] font-bold cursor-pointer shrink-0 shadow-lg"
+            className="shrink-0"
           >
             Request early access
-          </button>
+          </Button>
         </section>
       </div>
 
       {/* 4. Footer (Framed with Crop Marks) */}
       <div className="w-full px-5 sm:px-[30px] pb-5">
         <CropFrame className="w-full">
-          <footer id="footer" className="w-full bg-[#7C705A] text-[#FFFFA8] px-6 sm:px-10 py-6 flex flex-col sm:flex-row items-center justify-between gap-6 text-[11px] font-semibold">
+          <footer id="footer" className="w-full bg-taupe text-yellow px-6 sm:px-10 py-6 flex flex-col sm:flex-row items-center justify-between gap-6 text-label font-semibold">
             <div className="flex items-center gap-3">
-              <span className="font-bold text-[11px]">Briefd</span>
+              <span className="font-bold text-label">Briefd</span>
               <span>(by Finali Technologies AB)</span>
               <span>·</span>
               <span>Stockholm, Sweden</span>
             </div>
 
-            <div className="flex items-center gap-6 text-[#FFFFA8] text-[11px]">
+            <div className="flex items-center gap-6 text-yellow text-label">
               <Link href="/" className="hover:underline">Home</Link>
               <a href="#about" className="hover:underline">About</a>
-              <button 
-                onClick={() => setIsFinaliModalOpen(true)} 
-                className="hover:underline cursor-pointer font-bold text-[#FFFFA8]"
+              <button
+                onClick={() => setIsFinaliModalOpen(true)}
+                className="hover:underline cursor-pointer font-bold text-yellow"
               >
                 Automated Delivery
               </button>

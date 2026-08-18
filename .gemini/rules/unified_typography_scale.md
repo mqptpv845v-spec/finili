@@ -1,10 +1,8 @@
-# Rule: Unified 5-Tier Typography Scale
+# Rule: Typography scale
 
-All pages in Finali strictly adhere to this 5-tier typography scale:
-1. **Tier 1 (Display Numbers)**: `160px` font-light, tracking-[-0.06em], leading-none
-2. **Tier 2 (Display Headlines)**: `100px` font-semibold, tracking-tight, leading-[1.04]
-3. **Tier 3 (Section Ingresses)**: `24px` font-normal, leading-relaxed
-4. **Tier 4 (Card Systems)**: `18px` font-bold (titles) + `18px` font-medium (body copy)
-5. **Tier 5 (UI & Navigation)**: `12px` font-medium (Header, Buttons, Footer)
+Two systems, no exceptions (full spec: docs/design-system.md):
 
-Never introduce micro-differentiated pixel sizes outside this 5-tier system.
+1. **Marketing pages (`/`)**: the fluid clamp() system from `globals.css` — `h1`–`h4` element styles plus `.text-lead`, `.text-body`, `.text-ui`. No arbitrary `text-[...]` sizes.
+2. **Briefd (`/briefd` + `src/components/briefd/`)**: ONLY the golden-ratio utilities `text-hero` (78px), `text-section` (48px), `text-title` (30px), `text-value` (18px), `text-label` (11px). Never `text-sm`, `text-xs`, or pixel literals.
+
+Never introduce micro-differentiated pixel sizes outside these systems.

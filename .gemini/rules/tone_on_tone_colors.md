@@ -1,9 +1,10 @@
 # Rule: Tone-on-Tone Color System
 
-Always enforce Tone-on-Tone color pairings within defined color families for Finali sections, modules, text, and crop marks:
-1. **Petroleum & Cyan**: Background `#173537` + Text/Marks `#84CCEF`
-2. **Plum & Magenta**: Background `#520037` + Text/Marks `#FFADEB`
-3. **Taupe & Yellow**: Background `#95886D` + Text/Marks `#FFFE7D`
-4. **Charcoal & Off-White**: Background `#191A1C` + Text/Marks `#F5F5F5`
+Only the 8 brand tokens, used as Tailwind utilities (defined in `src/app/globals.css` `@theme`):
 
-Do not introduce arbitrary uncurated colors or mix unrelated color families.
+1. **Petroleum & Cyan**: `petrol` `#173537` + `cyan` `#84CCEF`
+2. **Plum & Magenta**: `plum` `#520037` + `magenta` `#FFADEB`
+3. **Taupe & Yellow**: `taupe` `#7C705A` + `yellow` `#FFFFA8`
+4. **Graphite & Light/White**: `graphite` `#191A1C` + `light` `#F5F5F5` / `#FFFFFF`
+
+Use `bg-plum`, `text-magenta`, `border-cyan/40`, etc. **Raw hex values in components are forbidden.** Black, white and opacity variants of the tokens are allowed. The old alternate values `#95886D` and `#FFFE7D` are retired (superseded by `taupe`/`yellow` above). Do not introduce arbitrary colors or mix unrelated pairs. Full spec: docs/design-system.md.

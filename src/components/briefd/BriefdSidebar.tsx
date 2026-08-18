@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { ChevronDown, ChevronRight, RotateCcw } from "lucide-react";
-import { FormatData } from "./FormatCardItem";
+import type { FormatData } from "@/lib/briefd/types";
+import { CATEGORIES, CATEGORY_ORDER } from "@/lib/briefd/categories";
+import { GeometricGlyph } from "@/components/atoms/GeometricGlyph";
+import { Button } from "@/components/atoms/Button";
 
 interface BriefdSidebarProps {
   formats: FormatData[];
@@ -11,41 +14,16 @@ interface BriefdSidebarProps {
   onSelectFormat: (formatId: string | null) => void;
   onSelectCategory: (categoryId: string) => void;
   onResetPlan: () => void;
+  clientName?: string;
+  campaignName?: string;
 }
 
-// Geometric Icon Generator based on Aspect Ratio placed on the RIGHT
-function GeometricGlyph({ widthRatio, heightRatio }: { widthRatio: number; heightRatio: number }) {
-  const ratio = widthRatio / heightRatio;
-  
-  if (ratio > 1.8) {
-    return (
-      <span className="inline-block w-3 h-1.5 border border-black bg-white shrink-0" title="Landscape banner" />
-    );
-  } else if (ratio > 1.05) {
-    return (
-      <span className="inline-block w-2.5 h-2 border border-black bg-white shrink-0" title="Landscape" />
-    );
-  } else if (ratio >= 0.95 && ratio <= 1.05) {
-    return (
-      <span className="inline-block w-2 h-2 border border-black bg-white shrink-0" title="Square (1:1)" />
-    );
-  } else if (ratio < 0.65) {
-    return (
-      <span className="inline-block w-1.5 h-3 border border-black bg-white shrink-0" title="Vertical (9:16)" />
-    );
-  } else {
-    return (
-      <span className="inline-block w-2 h-2.5 border border-black bg-white shrink-0" title="Portrait" />
-    );
-  }
-}
-
-const CATEGORY_META = [
-  { key: "some", name: "Social Media (SoMe)", title: "Social Media (SoMe)" },
-  { key: "display", name: "Digital Display & High-Impact", title: "Digital Banners" },
-  { key: "ooh", name: "Out of Home (OOH & DOOH)", title: "Out of Home (OOH)" },
-  { key: "print", name: "Newsprint & Magazines (Print)", title: "Printed Media" }
-];
+// Sidebar tree entries, derived from the single category source of truth.
+const CATEGORY_META = CATEGORY_ORDER.map((name) => ({
+  key: CATEGORIES[name].key,
+  name,
+  title: CATEGORIES[name].title,
+}));
 
 export function BriefdSidebar({
   formats,
@@ -53,7 +31,9 @@ export function BriefdSidebar({
   onSelectTab,
   onSelectFormat,
   onSelectCategory,
-  onResetPlan
+  onResetPlan,
+  clientName = "Bevero",
+  campaignName = "Black Friday 2026"
 }: BriefdSidebarProps) {
   // ALL CATEGORIES CLOSED BY DEFAULT
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
@@ -67,18 +47,18 @@ export function BriefdSidebar({
 
   return (
     <aside className="w-full lg:w-72 bg-white flex flex-col justify-between shrink-0 lg:sticky lg:top-6 lg:h-[calc(100vh-100px)] lg:max-h-[calc(100vh-100px)] overflow-hidden">
-      
+
       {/* 1. Top Section (Client, Campaign & All Formats Link) */}
       <div className="flex flex-col gap-3 shrink-0 pt-1 pb-2">
         <div className="flex flex-col gap-0.5 pb-1">
-          <span className="text-[11px] font-bold text-[#555555] tracking-normal">
+          <span className="text-label font-bold text-black/60 tracking-normal">
             Client &amp; Campaign
           </span>
-          <h2 className="text-[30px] font-bold text-black tracking-tight leading-none">
-            Bevero
+          <h2 className="text-title font-bold text-black tracking-tight leading-none">
+            {clientName}
           </h2>
-          <p className="text-[11px] font-semibold text-black">
-            Black Friday 2026
+          <p className="text-label font-semibold text-black">
+            {campaignName}
           </p>
         </div>
 
@@ -88,10 +68,10 @@ export function BriefdSidebar({
             onSelectTab("formats");
             onSelectFormat(null);
           }}
-          className="w-full text-left text-[11px] font-bold text-black px-2 py-1.5 hover:bg-black/5 transition-colors flex items-center justify-between cursor-pointer"
+          className="w-full text-left text-label font-bold text-black px-2 py-1.5 hover:bg-black/5 transition-colors flex items-center justify-between cursor-pointer"
         >
           <span className="hover:underline">All campaign formats</span>
-          <span className="text-[11px] font-semibold text-[#555555]">{formats.length}</span>
+          <span className="text-label font-semibold text-black/60">{formats.length}</span>
         </button>
       </div>
 
@@ -104,7 +84,7 @@ export function BriefdSidebar({
           return (
             <div key={cat.key} className="flex flex-col gap-0.5">
               {/* Category Header */}
-              <div className="flex items-center justify-between text-[11px] font-bold text-black py-1.5 px-2 hover:bg-black/5 transition-colors">
+              <div className="flex items-center justify-between text-label font-bold text-black py-1.5 px-2 hover:bg-black/5 transition-colors">
                 <button
                   onClick={() => {
                     onSelectTab("formats");
@@ -115,13 +95,13 @@ export function BriefdSidebar({
                 >
                   {cat.title}
                 </button>
-                
+
                 <button
                   onClick={() => toggleCategory(cat.name)}
                   className="p-1 text-black hover:opacity-60 cursor-pointer flex items-center gap-1 shrink-0"
                   title={isOpen ? "Collapse section" : "Expand section"}
                 >
-                  <span className="text-[10px] font-bold text-[#555555]">{catFormats.length}</span>
+                  <span className="text-label font-bold text-black/60">{catFormats.length}</span>
                   {isOpen ? (
                     <ChevronDown className="w-3.5 h-3.5 text-black" />
                   ) : (
@@ -143,7 +123,7 @@ export function BriefdSidebar({
                           onSelectTab("formats");
                           onSelectFormat(item.id);
                         }}
-                        className={`w-full text-left px-2.5 py-1 text-[11px] transition-colors flex items-center justify-between gap-3 cursor-pointer ${
+                        className={`w-full text-left px-2.5 py-1 text-label transition-colors flex items-center justify-between gap-3 cursor-pointer ${
                           isSelected
                             ? "bg-black text-white font-semibold"
                             : "text-black hover:bg-black/5 font-medium"
@@ -157,6 +137,7 @@ export function BriefdSidebar({
                           <GeometricGlyph
                             widthRatio={item.widthRatio}
                             heightRatio={item.heightRatio}
+                            size="inline"
                           />
                         </div>
                       </button>
@@ -171,17 +152,19 @@ export function BriefdSidebar({
 
       {/* 3. Pinned Bottom Footer (No harsh border line, clean button) */}
       <div className="shrink-0 pt-3 pb-2 bg-white flex flex-col gap-1.5">
-        <button
+        <Button
+          variant="soft"
+          size="sm"
           onClick={onResetPlan}
-          className="btn-morph w-full py-2.5 text-[11px] font-bold text-black bg-black/5 hover:bg-black/10 flex items-center justify-center gap-2 cursor-pointer"
+          className="w-full"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           <span>Upload new spreadsheet</span>
-        </button>
+        </Button>
 
-        <div className="flex items-center justify-center gap-1.5 text-[10px] text-[#555555] text-center pt-0.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-          <span>{formats.length} formats · 32 hidden breaks washed silently</span>
+        <div className="flex items-center justify-center gap-1.5 text-label text-black/60 text-center pt-0.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-petrol shrink-0" />
+          <span>{formats.length} formats · Live sync active</span>
         </div>
       </div>
 

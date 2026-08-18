@@ -1,36 +1,18 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 interface PreflightLoaderProps {
   onComplete: () => void;
 }
 
+// CMYK-inspired columns using the tone-on-tone brand pairs:
+// dark column base with a light "liquid" wave fill.
 const CMYK_COLUMNS = [
-  {
-    key: "C",
-    bgDark: "#173537",    // Mörk petroleum
-    fillLight: "#84CCEF", // Ljusblå / Cyan
-    phaseOffset: 0
-  },
-  {
-    key: "M",
-    bgDark: "#520037",    // Djup plommon
-    fillLight: "#FFADEB", // Rosa / Magenta
-    phaseOffset: Math.PI / 2
-  },
-  {
-    key: "Y",
-    bgDark: "#7C705A",    // Mörk taupe
-    fillLight: "#FFFFA8", // Ljusgul
-    phaseOffset: Math.PI
-  },
-  {
-    key: "K",
-    bgDark: "#191A1C",    // Djup grafit
-    fillLight: "#FFFFFF", // Vit
-    phaseOffset: (3 * Math.PI) / 2
-  }
+  { key: "C", bgClass: "bg-petrol", fillClass: "bg-cyan", phaseOffset: 0 },
+  { key: "M", bgClass: "bg-plum", fillClass: "bg-magenta", phaseOffset: Math.PI / 2 },
+  { key: "Y", bgClass: "bg-taupe", fillClass: "bg-yellow", phaseOffset: Math.PI },
+  { key: "K", bgClass: "bg-graphite", fillClass: "bg-white", phaseOffset: (3 * Math.PI) / 2 }
 ];
 
 export function PreflightLoader({ onComplete }: PreflightLoaderProps) {
@@ -63,40 +45,36 @@ export function PreflightLoader({ onComplete }: PreflightLoaderProps) {
 
   return (
     <div className="w-full max-w-lg mx-auto bg-transparent p-6 sm:p-10 flex flex-col items-center justify-center text-center gap-8">
-      
-      {/* 1. Rubrik med % */}
+
+      {/* 1. Heading with % */}
       <div className="flex flex-col items-center gap-2">
-        <h2 className="text-[30px] font-bold text-black tracking-tight leading-tight">
+        <h2 className="text-title font-bold text-black tracking-tight leading-tight">
           Parsing media plan: Bevero Black Friday 2026
         </h2>
-        <span className="text-[18px] font-bold text-black/70">
+        <span className="text-value font-bold text-black/70">
           {progress}%
         </span>
       </div>
 
-      {/* 2. 4 Pelare: Mörk botten med ljus våg inuti (Inga borders) */}
+      {/* 2. Four columns: dark base with a light wave inside (no borders) */}
       <div className="flex items-end justify-center gap-3 sm:gap-4 my-2">
         {CMYK_COLUMNS.map((col) => {
           // Dynamic wave height
           const waveHeight = progress >= 98
             ? 100
             : 30 + Math.sin(waveTime + col.phaseOffset) * 22 + (progress * 0.45);
-          
+
           const clampedHeight = Math.min(100, Math.max(15, waveHeight));
 
           return (
             <div
               key={col.key}
-              className="w-12 sm:w-14 h-36 sm:h-44 overflow-hidden relative flex flex-col justify-end"
-              style={{ backgroundColor: col.bgDark }}
+              className={`w-12 sm:w-14 h-36 sm:h-44 overflow-hidden relative flex flex-col justify-end ${col.bgClass}`}
             >
-              {/* Ljus vätska som gör vågen */}
+              {/* Light liquid forming the wave */}
               <div
-                className="w-full transition-all duration-100 ease-out"
-                style={{
-                  height: `${clampedHeight}%`,
-                  backgroundColor: col.fillLight
-                }}
+                className={`w-full transition-all duration-100 ease-out ${col.fillClass}`}
+                style={{ height: `${clampedHeight}%` }}
               />
             </div>
           );
