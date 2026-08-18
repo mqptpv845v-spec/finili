@@ -1,18 +1,12 @@
-# Finali App Agent Knowledge Base
+# Agent instructions — Finali
 
-## Project Overview
-This project is a web application named "Finali". It is built with Next.js and React.
+Canonical agent instructions live in [CLAUDE.md](CLAUDE.md) (they apply to any coding agent, not only Claude). Read that first.
 
-## Tech Stack
-- **Framework**: Next.js (v16.1), React (v19.2)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS (v4)
-- **Animation**: GSAP (@gsap/react) & Framer Motion
-- **Icons**: Lucide React
-- **Storage**: Vercel Blob
-- **Other utilities**: clsx, tailwind-merge, xlsx
+Quick pointers:
 
-## Code Guidelines
-- Follow standard Next.js conventions for the App router.
-- Use Tailwind classes for all styling; maintain a consistent design system.
-- Utilize GSAP or Framer Motion for complex animations depending on performance needs.
+- Product: [docs/product.md](docs/product.md)
+- Architecture: [docs/architecture.md](docs/architecture.md)
+- Design system (binding rules): [docs/design-system.md](docs/design-system.md)
+- Machine-readable style rules: [.gemini/rules/](.gemini/rules/)
+
+Stack: Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind v4 (`@theme` tokens) · Vitest · exceljs · Specific.dev (`specific.hcl`). Icons: Lucide.
