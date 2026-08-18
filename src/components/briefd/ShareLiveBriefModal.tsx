@@ -6,7 +6,6 @@ import { X, Copy, Check, Link as LinkIcon, ShieldCheck, Users, Globe } from "luc
 interface ShareLiveBriefModalProps {
   isOpen: boolean;
   onClose: () => void;
-  campaignName: string;
   clientName: string;
   formatCount: number;
 }
@@ -14,7 +13,6 @@ interface ShareLiveBriefModalProps {
 export function ShareLiveBriefModal({
   isOpen,
   onClose,
-  campaignName,
   clientName,
   formatCount
 }: ShareLiveBriefModalProps) {

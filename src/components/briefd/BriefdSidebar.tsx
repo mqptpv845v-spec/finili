@@ -7,7 +7,6 @@ import { FormatData } from "./FormatCardItem";
 interface BriefdSidebarProps {
   formats: FormatData[];
   selectedFormatId: string | null;
-  activeTab: "formats" | "calendar" | "table";
   onSelectTab: (tab: "formats" | "calendar" | "table") => void;
   onSelectFormat: (formatId: string | null) => void;
   onSelectCategory: (categoryId: string) => void;
@@ -51,7 +50,6 @@ const CATEGORY_META = [
 export function BriefdSidebar({
   formats,
   selectedFormatId,
-  activeTab,
   onSelectTab,
   onSelectFormat,
   onSelectCategory,

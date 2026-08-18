@@ -14,7 +14,7 @@ export function FinaliAIModal({ isOpen, onClose }: FinaliAIModalProps) {
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!email) return;
     setIsSubmitted(true);
@@ -78,9 +78,9 @@ export function FinaliAIModal({ isOpen, onClose }: FinaliAIModalProps) {
             <div className="w-12 h-12 rounded-full bg-[#FFADEB]/20 flex items-center justify-center">
               <CheckCircle2 className="w-6 h-6 text-[#FFADEB]" />
             </div>
-            <h3 className="text-2xl font-bold text-[#FFADEB]">You're on the list!</h3>
+            <h3 className="text-2xl font-bold text-[#FFADEB]">You&apos;re on the list!</h3>
             <p className="text-sm text-[#FFADEB]/80 max-w-sm">
-              We've saved your request for <strong className="text-white">{email}</strong>. We will reach out as soon as early access opens.
+              We&apos;ve saved your request for <strong className="text-white">{email}</strong>. We will reach out as soon as early access opens.
             </p>
             <button
               onClick={onClose}

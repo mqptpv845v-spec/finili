@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, Suspense } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CropFrame } from "@/components/CropFrame";
 import { FormatCardItem, FormatData } from "@/components/briefd/FormatCardItem";
 import { BriefdSidebar } from "@/components/briefd/BriefdSidebar";
@@ -435,58 +436,34 @@ const SECTIONS = [
   }
 ];
 
-export default function BriefdPage() {
+function BriefdApp() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [viewState, setViewState] = useState<"dropzone" | "loading" | "workspace">("workspace");
-  const [selectedFormatId, setSelectedFormatId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"formats" | "calendar" | "table">("formats");
   const [isFinaliModalOpen, setIsFinaliModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
-  // Sync browser back/forward buttons with format detail modal
-  useEffect(() => {
-    // Check initial url params
-    if (typeof window !== "undefined") {
-      const params = new URLSearchParams(window.location.search);
-      const fmtParam = params.get("format");
-      if (fmtParam) {
-        setSelectedFormatId(fmtParam);
-      }
-    }
-
-    const handlePopState = () => {
-      const params = new URLSearchParams(window.location.search);
-      const fmtParam = params.get("format");
-      setSelectedFormatId(fmtParam || null);
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  // The URL is the single source of truth for the open format detail view,
+  // so browser back/forward buttons work naturally.
+  const selectedFormatId = searchParams.get("format");
 
   const handleSelectFormat = (id: string | null) => {
     if (id !== null) {
-      setSelectedFormatId(id);
-      if (typeof window !== "undefined") {
-        const url = new URL(window.location.href);
-        url.searchParams.set("format", id);
-        window.history.pushState({ formatId: id }, "", url.toString());
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
+      router.push(`${pathname}?format=${encodeURIComponent(id)}`, { scroll: false });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       const prevId = selectedFormatId;
-      setSelectedFormatId(null);
-      if (typeof window !== "undefined") {
-        const url = new URL(window.location.href);
-        url.searchParams.delete("format");
-        window.history.pushState({}, "", url.pathname + (url.search ? url.search : ""));
-        if (prevId) {
-          setTimeout(() => {
-            const el = document.getElementById(prevId);
-            if (el) {
-              el.scrollIntoView({ behavior: "smooth", block: "center" });
-            }
-          }, 80);
-        }
+      router.push(pathname, { scroll: false });
+      if (prevId) {
+        setTimeout(() => {
+          const el = document.getElementById(prevId);
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }, 80);
       }
     }
   };
@@ -609,7 +586,6 @@ export default function BriefdPage() {
             <BriefdSidebar
               formats={CAMPAIGN_FORMATS}
               selectedFormatId={selectedFormatId}
-              activeTab={activeTab}
               onSelectTab={setActiveTab}
               onSelectFormat={handleSelectFormat}
               onSelectCategory={scrollToCategory}
@@ -802,11 +778,19 @@ export default function BriefdPage() {
       <ShareLiveBriefModal 
         isOpen={isShareModalOpen} 
         onClose={() => setIsShareModalOpen(false)} 
-        campaignName="Black Friday 2026"
         clientName="Bevero"
         formatCount={CAMPAIGN_FORMATS.length}
       />
 
     </div>
+  );
+}
+
+// useSearchParams() requires a Suspense boundary on statically rendered pages.
+export default function BriefdPage() {
+  return (
+    <Suspense fallback={null}>
+      <BriefdApp />
+    </Suspense>
   );
 }

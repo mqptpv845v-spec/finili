@@ -111,7 +111,7 @@ export default function Home() {
                   We built Briefd (by Finali) as a focused, lightweight tool to eliminate spreadsheet chaos for media agencies, brand managers, and production teams.
                 </p>
                 <p className="text-[clamp(0.75rem,0.92vw,1.1rem)] font-normal leading-[1.38]">
-                  By creating a clean visual workspace for campaign delivery, we are building the industry's most reliable ad spec ecosystem while laying the foundation for next-generation automated artwork production.
+                  By creating a clean visual workspace for campaign delivery, we are building the industry&apos;s most reliable ad spec ecosystem while laying the foundation for next-generation automated artwork production.
                 </p>
               </div>
             </div>

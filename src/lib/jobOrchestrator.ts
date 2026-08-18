@@ -1,5 +1,28 @@
-import * as xlsx from "xlsx";
+import ExcelJS from "exceljs";
 import brainData from "./data/brain.json";
+
+export interface MediaSpec {
+    id: string;
+    name: string;
+    publisher: string;
+    dimensions: {
+        width_mm?: number;
+        height_mm?: number;
+        width_px?: number;
+        height_px?: number;
+    };
+    bleed_mm: number;
+    safe_zones: {
+        text_mm: number;
+        image_mm: number;
+    };
+    color: {
+        icc_profile: string;
+        pdf_preset: string;
+        transparency_flattener: string;
+    };
+    naming_convention: string;
+}
 
 export interface MediaPlanRow {
     Campaign: string;
@@ -12,77 +35,119 @@ export interface OrchestratedJob {
     campaign: string;
     publisher: string;
     formatName: string;
-    specs: unknown;
+    specs: MediaSpec | null;
     generatedFileName: string;
     status: "pending" | "error" | "complete";
     error?: string;
     outputUrl?: string;
 }
 
+const mediaSpecs: MediaSpec[] = brainData.media_specs;
+
 export async function parseExcelBuffer(buffer: Buffer): Promise<MediaPlanRow[]> {
-    const workbook = xlsx.read(buffer, { type: "buffer" });
-    const firstSheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[firstSheetName];
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(buffer as unknown as ArrayBuffer);
 
-    // Convert sheet to JSON array
-    const rawData = xlsx.utils.sheet_to_json<Record<string, unknown>>(worksheet);
+    const worksheet = workbook.worksheets[0];
+    if (!worksheet) {
+        throw new Error("The uploaded file contains no worksheets.");
+    }
 
-    // Map to our expected format with robust column detection
-    return rawData.map(row => {
-        // Find keys case-insensitively
-        const findKey = (candidates: string[]) => {
-            const keys = Object.keys(row);
-            for (const cand of candidates) {
-                const found = keys.find(k => k.toLowerCase() === cand.toLowerCase());
-                if (found) return row[found] as string;
+    // Header row -> column index lookup, case-insensitive
+    const headerByColumn = new Map<number, string>();
+    worksheet.getRow(1).eachCell((cell, colNumber) => {
+        headerByColumn.set(colNumber, String(cell.value ?? "").trim());
+    });
+
+    const rows: MediaPlanRow[] = [];
+    worksheet.eachRow((row, rowNumber) => {
+        if (rowNumber === 1) return;
+
+        const values: Record<string, string> = {};
+        row.eachCell((cell, colNumber) => {
+            const header = headerByColumn.get(colNumber);
+            if (header) values[header.toLowerCase()] = String(cell.text ?? "").trim();
+        });
+
+        const findColumn = (candidates: string[]): string | null => {
+            for (const candidate of candidates) {
+                const value = values[candidate.toLowerCase()];
+                if (value) return value;
             }
             return null;
         };
 
-        return {
-            Campaign: findKey(["Campaign", "Kampanj", "Kampanjtext", "Headline", "Copy"]) || "Finali_Launch",
-            Publisher: findKey(["Publisher", "Mediehus", "Media", "Publisher Name"]) || "Unknown",
-            Format: findKey(["Format", "Size", "Dimensioner", "Typ"]) || "Unknown",
-            Notes: findKey(["Notes", "Noteringar", "Kommentarer"]) || ""
+        const parsed: MediaPlanRow = {
+            Campaign: findColumn(["Campaign", "Kampanj", "Kampanjtext", "Headline", "Copy"]) || "Finali_Launch",
+            Publisher: findColumn(["Publisher", "Mediehus", "Media", "Publisher Name", "Publicist"]) || "Unknown",
+            Format: findColumn(["Format", "Size", "Dimensioner", "Typ"]) || "Unknown",
+            Notes: findColumn(["Notes", "Noteringar", "Kommentarer"]) || "",
         };
+
+        // Skip fully empty rows
+        if (parsed.Publisher !== "Unknown" || parsed.Format !== "Unknown") {
+            rows.push(parsed);
+        }
     });
+
+    return rows;
+}
+
+function normalize(value: string): string {
+    return value.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function findSpec(row: MediaPlanRow): MediaSpec | undefined {
+    const publisher = normalize(row.Publisher);
+    const format = normalize(row.Format);
+
+    const forPublisher = mediaSpecs.filter(spec => normalize(spec.publisher) === publisher);
+
+    // Prefer an exact format-name match, fall back to a substring match —
+    // but only when the query is long enough to be meaningful.
+    return (
+        forPublisher.find(spec => normalize(spec.name) === format) ??
+        forPublisher.find(spec => format.length >= 4 && normalize(spec.name).includes(format))
+    );
+}
+
+function fillNamingConvention(template: string, tokens: Record<string, string>): string {
+    let result = template;
+    for (const [token, value] of Object.entries(tokens)) {
+        result = result.replaceAll(`{{${token}}}`, value);
+    }
+    return result;
 }
 
 export function matchToBrain(row: MediaPlanRow): OrchestratedJob {
-    // Try to find a match in the brain based on publisher and format
-    const match = brainData.media_specs.find(spec =>
-        spec.publisher.toLowerCase() === row.Publisher.toLowerCase() &&
-        spec.name.toLowerCase().includes(row.Format.toLowerCase())
-    );
+    const match = findSpec(row);
 
-    if (match) {
-        const dateStr = new Date().toISOString().split('T')[0];
-        let fileName = match.naming_convention
-            .replace("{{Campaign}}", row.Campaign)
-            .replace("{{Publisher}}", row.Publisher)
-            .replace("{{Format}}", match.name)
-            .replace("{{Date}}", dateStr);
-
-        // Replace spaces with underscores for a clean filename
-        fileName = fileName.replace(/\s+/g, "_");
-
+    if (!match) {
         return {
             campaign: row.Campaign,
             publisher: row.Publisher,
-            formatName: match.name,
-            specs: match,
-            generatedFileName: fileName,
-            status: "pending"
+            formatName: row.Format,
+            specs: null,
+            generatedFileName: "",
+            status: "error",
+            error: `No matching spec found in The Brain for: ${row.Publisher} - ${row.Format}`,
         };
     }
+
+    const dateStr = new Date().toISOString().split("T")[0];
+    const fileName = fillNamingConvention(match.naming_convention, {
+        Campaign: row.Campaign,
+        Publisher: row.Publisher,
+        Format: match.name,
+        Date: dateStr,
+    }).replace(/\s+/g, "_");
 
     return {
         campaign: row.Campaign,
         publisher: row.Publisher,
-        formatName: row.Format,
-        specs: null,
-        generatedFileName: "",
-        status: "error",
-        error: `No matching spec found in The Brain for: ${row.Publisher} - ${row.Format}`
+        formatName: match.name,
+        specs: match,
+        generatedFileName: fileName,
+        status: "pending",
     };
 }

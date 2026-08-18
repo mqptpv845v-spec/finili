@@ -1,11 +1,11 @@
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import { promisify } from "util";
-import fs from "fs/promises";
 import path from "path";
+import type { OrchestratedJob } from "@/lib/jobOrchestrator";
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
-export async function runLocalInDesignJob(masterPath: string, outputPath: string, specs: any): Promise<string> {
+export async function runLocalInDesignJob(masterPath: string, outputPath: string, job: OrchestratedJob): Promise<string> {
 
     const jsxScriptPath = path.resolve(process.cwd(), "src/scripts/processJob.jsx");
     const inddApp = "Adobe InDesign 2026";
@@ -14,8 +14,8 @@ export async function runLocalInDesignJob(masterPath: string, outputPath: string
     const scriptArgs = {
         masterPath: masterPath,
         outputPath: outputPath,
-        campaignText: specs.campaign || "Test Campaign!",
-        specs: specs.specs // The matching brain.json spec
+        campaignText: job.campaign || "Test Campaign!",
+        specs: job.specs // The matching brain.json spec
     };
 
     // Pass arguments securely using Base64 to bypass ALL AppleScript quoting issues
@@ -28,22 +28,22 @@ export async function runLocalInDesignJob(masterPath: string, outputPath: string
             tell script args
                 set value name "jobArgsBase64" value "${argsBase64}"
             end tell
-            
+
             -- Run the JSX file
             set scriptResult to do script POSIX file "${jsxScriptPath}" language javascript
-            
+
             -- Clear args
             tell script args
                 clear
             end tell
-            
+
             return scriptResult
         end tell
     `;
 
     try {
         console.log(`[InDesign Bridge] Executing AppleScript to process ${path.basename(masterPath)}...`);
-        const { stdout, stderr } = await execAsync(`osascript -e '${appleScript}'`);
+        const { stdout, stderr } = await execFileAsync("osascript", ["-e", appleScript]);
 
         const result = stdout.trim();
         console.log(`[InDesign Bridge] Result: ${result}`);

@@ -2,7 +2,7 @@
     "media_specs": [
         {
             "id": "svd-helsida",
-            "name": "Halvsida (Stående)",
+            "name": "Helsida (Stående)",
             "publisher": "SvD",
             "dimensions": {
                 "width_mm": 248,
@@ -22,7 +22,7 @@
         },
         {
             "id": "dn-halvsida",
-            "name": "Helsida (Stående)",
+            "name": "Halvsida (Liggande)",
             "publisher": "DN",
             "dimensions": {
                 "width_mm": 252,

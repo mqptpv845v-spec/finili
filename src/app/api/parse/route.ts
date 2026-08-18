@@ -4,9 +4,9 @@ import { parseExcelBuffer, matchToBrain } from "@/lib/jobOrchestrator";
 export async function POST(req: NextRequest) {
     try {
         const formData = await req.formData();
-        const mediaPlanFile = formData.get("mediaPlan") as File;
+        const mediaPlanFile = formData.get("mediaPlan");
 
-        if (!mediaPlanFile) {
+        if (!(mediaPlanFile instanceof File)) {
             return NextResponse.json({ error: "Missing required files" }, { status: 400 });
         }
 

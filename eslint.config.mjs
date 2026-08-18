@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // ExtendScript for Adobe InDesign — not app code, runs inside InDesign's ES3 engine.
+    "src/scripts/**",
   ]),
 ]);
 

@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { FormatData } from "./FormatCardItem";
-import { Search, ArrowUpDown, Download, Copy, Check, ExternalLink, Table } from "lucide-react";
+import { Search, ArrowUpDown, Download, Copy, Check, ExternalLink } from "lucide-react";
 
 interface BriefdSpreadsheetViewProps {
   formats: FormatData[];

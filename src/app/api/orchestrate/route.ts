@@ -3,19 +3,38 @@ import { parseExcelBuffer, matchToBrain, OrchestratedJob } from "@/lib/jobOrches
 import { runLocalInDesignJob } from "@/lib/api/adobe/localBridge";
 import fs from "fs/promises";
 import path from "path";
-import { exec } from "child_process";
+import { execFile } from "child_process";
 import { promisify } from "util";
 
-const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
+
+// NOTE: This route drives a locally installed Adobe InDesign over AppleScript.
+// It only works in local development on macOS — it is the Finali AI prototype,
+// not a deployable cloud endpoint. See docs/architecture.md.
+
+async function findInddFiles(dir: string): Promise<string[]> {
+    const found: string[] = [];
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.name === "__MACOSX" || entry.name.startsWith("._")) continue;
+        if (entry.isDirectory()) {
+            found.push(...(await findInddFiles(fullPath)));
+        } else if (entry.name.toLowerCase().endsWith(".indd")) {
+            found.push(fullPath);
+        }
+    }
+    return found;
+}
 
 export async function POST(req: NextRequest) {
     let tmpDir = "";
     try {
         const formData = await req.formData();
-        const mediaPlanFile = formData.get("mediaPlan") as File;
-        const masterFile = formData.get("masterFile") as File; // Expected to be a .zip file
+        const mediaPlanFile = formData.get("mediaPlan");
+        const masterFile = formData.get("masterFile"); // Expected to be a .zip file
 
-        if (!mediaPlanFile || !masterFile) {
+        if (!(mediaPlanFile instanceof File) || !(masterFile instanceof File)) {
             return NextResponse.json({ error: "Missing required files" }, { status: 400 });
         }
 
@@ -41,13 +60,11 @@ export async function POST(req: NextRequest) {
         await fs.writeFile(zipPath, masterBuffer);
 
         // 3. Unzip the package
-        console.log(`[Backend] Extracing master ZIP to ${tmpDir}...`);
-        await execAsync(`unzip -o ${zipPath} -d ${tmpDir}`);
+        console.log(`[Backend] Extracting master ZIP to ${tmpDir}...`);
+        await execFileAsync("unzip", ["-o", zipPath, "-d", tmpDir]);
 
         // 4. Find the .indd file inside the extracted folder
-        // Filter out macOS hidden files
-        const findResult = await execAsync(`find ${tmpDir} -name "*.indd"`);
-        const inddFiles = findResult.stdout.trim().split("\n").filter(f => f && !f.includes('__MACOSX') && !path.basename(f).startsWith('._'));
+        const inddFiles = await findInddFiles(tmpDir);
 
         if (inddFiles.length === 0) {
             throw new Error("No valid .indd file found inside the uploaded ZIP archive.");
@@ -57,9 +74,10 @@ export async function POST(req: NextRequest) {
         console.log(`[Backend] Found Master InDesign File: ${masterFilePath}`);
 
         // 5. Process Jobs via AppleScript
-        const processedJobs = [];
+        const processedJobs: OrchestratedJob[] = [];
 
-        // Ensure "public/output" exists so the frontend can serve the PDFs
+        // Ensure "public/output" exists so the dev server can serve the PDFs.
+        // (Local-dev only: this route never runs in a deployed environment.)
         const outputDir = path.join(process.cwd(), "public", "output");
         await fs.mkdir(outputDir, { recursive: true });
 
@@ -70,19 +88,18 @@ export async function POST(req: NextRequest) {
             }
 
             try {
-                const pdfFileName = `${job.generatedFileName}`;
+                const pdfFileName = job.generatedFileName;
                 const pdfOutputPath = path.join(outputDir, pdfFileName);
 
                 // Run the local InDesign bridge
                 console.log(`[Backend] Generating ${pdfFileName}...`);
                 await runLocalInDesignJob(masterFilePath, pdfOutputPath, job);
 
-                // If successful, push updated job
                 processedJobs.push({
                     ...job,
                     status: "complete",
                     outputUrl: `/output/${pdfFileName}` // Public URL route
-                } as OrchestratedJob);
+                });
 
             } catch (jobErr) {
                 console.error(`[Backend] Job Failed for ${job.generatedFileName}:`, jobErr);
@@ -90,7 +107,7 @@ export async function POST(req: NextRequest) {
                     ...job,
                     status: "error",
                     error: (jobErr as Error).message
-                } as OrchestratedJob);
+                });
             }
         }
 
@@ -105,10 +122,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: message }, { status: 500 });
     } finally {
         // Cleanup the temporary unzipped files (don't leave heavy files lying around)
-        /*
         if (tmpDir) {
-           await execAsync(`rm -rf ${tmpDir}`).catch(() => {});
+            await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
         }
-        */
     }
 }
