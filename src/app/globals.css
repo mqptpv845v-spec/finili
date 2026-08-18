@@ -1,0 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* ==========================================================================
+       1. FÄRGSYSTEM (Brand Color Tokens)
+       ========================================================================== */
+    --color-bg: #FFFFFF;
+    --color-text: #191A1C;
+    --color-petrol: #173537;
+    --color-plum: #520037;
+    --color-cyan: #84CCEF;
+    --color-taupe: #7C705A;
+    --color-magenta: #FFADEB;
+    --color-yellow: #FFFFA8;
+
+    /* ==========================================================================
+       2. TYPOGRAFISYSTEM & STORLEKAR (Ändra storlekar direkt här!)
+       ========================================================================== */
+    
+    /* H1 — Display Hero Rubrik (Massiv hero-titel som passar desktop) */
+    --font-h1-size: clamp(2.5rem, 5.1vw, 5.8rem);
+    --font-h1-lh: 1.02;
+    --font-h1-tracking: -0.035em;
+    --font-h1-weight: 700;
+
+    /* H2 — Sektionsrubriker (One link, Turn rows, How it works, Tech) */
+    --font-h2-size: clamp(2.5rem, 4.8vw, 6.2rem);
+    --font-h2-lh: 1;
+    --font-h2-tracking: -0.03em;
+    --font-h2-weight: 700;
+
+    /* H3 — Stora Modul- & Bento-rubriker (What-rutan, Step-titlar) */
+    --font-h3-size: clamp(1.65rem, 2.7vw, 3.6rem);
+    --font-h3-lh: 1;
+    --font-h3-tracking: -0.025em;
+    --font-h3-weight: 700;
+
+    /* H4 — Mellanstora kortrubriker (Why-titel, Steg-underrubriker) */
+    --font-h4-size: clamp(1.15rem, 1.5vw, 1.95rem);
+    --font-h4-lh: 1;
+    --font-h4-tracking: -0.02em;
+    --font-h4-weight: 700;
+
+    /* Lead / Ingress — Stora förklarande stycken (Hero-ingress, sektionsingress) */
+    --font-lead-size: clamp(1.15rem, 1.55vw, 1.95rem);
+    --font-lead-lh: 1.45;
+    --font-lead-weight: 400;
+
+    /* Body — Normal Brödtext (Bento Who/Why, Stegtexter) */
+    --font-body-size: clamp(0.85rem, 1.05vw, 1.25rem);
+    --font-body-lh: 1.5;
+    --font-body-weight: 400;
+
+    /* UI & Micro — Länkar, Knappar, Överskrifter (What/Why/Who-etiketter) */
+    --font-ui-size: clamp(0.8rem, 0.95vw, 1.1rem);
+    --font-ui-lh: 1.2;
+    --font-ui-weight: 500;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* HTML Tag Defaults */
+  h1, .h1 {
+    font-size: var(--font-h1-size);
+    line-height: var(--font-h1-lh);
+    letter-spacing: var(--font-h1-tracking);
+    font-weight: var(--font-h1-weight);
+  }
+
+  h2, .h2 {
+    font-size: var(--font-h2-size);
+    line-height: var(--font-h2-lh);
+    letter-spacing: var(--font-h2-tracking);
+    font-weight: var(--font-h2-weight);
+  }
+
+  h3, .h3 {
+    font-size: var(--font-h3-size);
+    line-height: var(--font-h3-lh);
+    letter-spacing: var(--font-h3-tracking);
+    font-weight: var(--font-h3-weight);
+  }
+
+  h4, .h4 {
+    font-size: var(--font-h4-size);
+    line-height: var(--font-h4-lh);
+    letter-spacing: var(--font-h4-tracking);
+    font-weight: var(--font-h4-weight);
+  }
+}
+
+/* Signature Finali Button Morph: Sharp box to fully rounded pill */
+.btn-morph {
+  border-radius: 0px !important;
+  transition: border-radius 0.5s cubic-bezier(0.25, 1, 0.5, 1), background-color 0.3s ease, opacity 0.2s ease !important;
+}
+.btn-morph:hover {
+  border-radius: 40px !important;
+}
+
+/* ==========================================================================
+   3. TYPOGRAFISKA HJÄLPKLASSER
+   ========================================================================== */
+.text-lead {
+  font-size: var(--font-lead-size);
+  line-height: var(--font-lead-lh);
+  font-weight: var(--font-lead-weight);
+}
+
+.text-body {
+  font-size: var(--font-body-size);
+  line-height: var(--font-body-lh);
+  font-weight: var(--font-body-weight);
+}
+
+.text-ui {
+  font-size: var(--font-ui-size);
+  line-height: var(--font-ui-lh);
+  font-weight: var(--font-ui-weight);
+}
+
+/* Base 4px grid alignment helper */
+.grid-4px {
+  background-size: 16px 16px;
+  background-image: 
+    radial-gradient(circle, rgba(25, 26, 28, 0.08) 1px, transparent 1px);
+}
+
+/* Crop marks container styling */
+.crop-container {
+  position: relative;
+}
+
+.crop-mark {
+  position: absolute;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* Halftone style class */
+.halftone-img {
+  mix-blend-mode: multiply;
+  filter: contrast(1.2) grayscale(0.2);
+}

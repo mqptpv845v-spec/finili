@@ -1,0 +1,124 @@
+{
+    "media_specs": [
+        {
+            "id": "svd-helsida",
+            "name": "Halvsida (Stående)",
+            "publisher": "SvD",
+            "dimensions": {
+                "width_mm": 248,
+                "height_mm": 360
+            },
+            "bleed_mm": 3,
+            "safe_zones": {
+                "text_mm": 10,
+                "image_mm": 5
+            },
+            "color": {
+                "icc_profile": "WAN-IFRAnewspaper26v5.icc",
+                "pdf_preset": "PDF/X-1a:2001",
+                "transparency_flattener": "High Resolution"
+            },
+            "naming_convention": "{{Campaign}}_{{Publisher}}_Helsida_{{Date}}.pdf"
+        },
+        {
+            "id": "dn-halvsida",
+            "name": "Helsida (Stående)",
+            "publisher": "DN",
+            "dimensions": {
+                "width_mm": 252,
+                "height_mm": 180
+            },
+            "bleed_mm": 0,
+            "safe_zones": {
+                "text_mm": 5,
+                "image_mm": 5
+            },
+            "color": {
+                "icc_profile": "PSO_LWC_Improved_eci.icc",
+                "pdf_preset": "PDF/X-4",
+                "transparency_flattener": "None"
+            },
+            "naming_convention": "{{Campaign}}_{{Publisher}}_Halvsida_{{Date}}.pdf"
+        },
+        {
+            "id": "jcdecaux-eurosize",
+            "name": "Eurosize",
+            "publisher": "JCDecaux",
+            "dimensions": {
+                "width_mm": 1185,
+                "height_mm": 1750
+            },
+            "bleed_mm": 5,
+            "safe_zones": {
+                "text_mm": 50,
+                "image_mm": 10
+            },
+            "color": {
+                "icc_profile": "CoatedFOGRA39.icc",
+                "pdf_preset": "PDF/X-4",
+                "transparency_flattener": "None"
+            },
+            "naming_convention": "{{Campaign}}_OOH_{{Publisher}}_Eurosize.pdf"
+        },
+        {
+            "id": "di-weekend",
+            "name": "Di Weekend Magasin",
+            "publisher": "Dagens Industri",
+            "dimensions": {
+                "width_mm": 235,
+                "height_mm": 312
+            },
+            "bleed_mm": 3,
+            "safe_zones": {
+                "text_mm": 15,
+                "image_mm": 5
+            },
+            "color": {
+                "icc_profile": "CoatedFOGRA39.icc",
+                "pdf_preset": "PDF/X-4",
+                "transparency_flattener": "None"
+            },
+            "naming_convention": "{{Campaign}}_{{Publisher}}_{{Format}}_{{Date}}.pdf"
+        },
+        {
+            "id": "clear-channel-play",
+            "name": "Play Digital",
+            "publisher": "Clear Channel",
+            "dimensions": {
+                "width_px": 1080,
+                "height_px": 1920
+            },
+            "bleed_mm": 0,
+            "safe_zones": {
+                "text_mm": 0,
+                "image_mm": 0
+            },
+            "color": {
+                "icc_profile": "sRGB",
+                "pdf_preset": "High Quality Print",
+                "transparency_flattener": "None"
+            },
+            "naming_convention": "{{Campaign}}_{{Publisher}}_{{Format}}_{{Date}}_RGB.pdf"
+        },
+        {
+            "id": "rulltrappstavla",
+            "name": "Rulltrappstavla",
+            "publisher": "Wall Street Media",
+            "dimensions": {
+                "width_mm": 464,
+                "height_mm": 912
+            },
+            "bleed_mm": 5,
+            "safe_zones": {
+                "text_mm": 20,
+                "image_mm": 10
+            },
+            "color": {
+                "icc_profile": "CoatedFOGRA39.icc",
+                "pdf_preset": "PDF/X-4",
+                "transparency_flattener": "None"
+            },
+            "naming_convention": "{{Campaign}}_{{Publisher}}_{{Format}}_{{Date}}.pdf"
+        }
+    ]
+}
