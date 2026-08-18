@@ -19,7 +19,7 @@ import { PreflightLoader } from "@/components/briefd/PreflightLoader";
 import { FinaliAIModal } from "@/components/briefd/FinaliAIModal";
 import { FileSpreadsheet, Calendar as CalendarIcon, Table as TableIcon, Share2, Globe, X } from "lucide-react";
 
-// The 21 campaign formats (Bevero Black Friday 2026 Campaign)
+// The sample campaign formats (Bevero Black Friday 2026); counts in the UI derive from this array
 const CAMPAIGN_FORMATS: FormatData[] = [
   // 1. Social Media (SoMe)
   {
