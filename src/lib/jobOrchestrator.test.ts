@@ -18,7 +18,7 @@ describe("parseExcelBuffer", () => {
         );
         const rows = await parseExcelBuffer(buffer);
         expect(rows).toEqual([
-            { Campaign: "Black Friday", Publisher: "SvD", Format: "Helsida (Stående)", Notes: "rush" },
+            { Campaign: "Black Friday", Publisher: "SvD", Format: "Helsida (Stående)", Deadline: "", Notes: "rush" },
         ]);
     });
 

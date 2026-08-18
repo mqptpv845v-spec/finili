@@ -5,6 +5,8 @@ export interface MediaSpec {
     id: string;
     name: string;
     publisher: string;
+    category: string;
+    category_tag: string;
     dimensions: {
         width_mm?: number;
         height_mm?: number;
@@ -28,6 +30,7 @@ export interface MediaPlanRow {
     Campaign: string;
     Publisher: string;
     Format: string;
+    Deadline?: string;
     Notes?: string;
 }
 
@@ -35,6 +38,7 @@ export interface OrchestratedJob {
     campaign: string;
     publisher: string;
     formatName: string;
+    deadline: string;
     specs: MediaSpec | null;
     generatedFileName: string;
     status: "pending" | "error" | "complete";
@@ -81,6 +85,7 @@ export async function parseExcelBuffer(buffer: Buffer): Promise<MediaPlanRow[]> 
             Campaign: findColumn(["Campaign", "Kampanj", "Kampanjtext", "Headline", "Copy"]) || "Finali_Launch",
             Publisher: findColumn(["Publisher", "Mediehus", "Media", "Publisher Name", "Publicist"]) || "Unknown",
             Format: findColumn(["Format", "Size", "Dimensioner", "Typ"]) || "Unknown",
+            Deadline: findColumn(["Deadline", "Materialdag", "Materialdeadline", "Datum", "Due"]) || "",
             Notes: findColumn(["Notes", "Noteringar", "Kommentarer"]) || "",
         };
 
@@ -127,6 +132,7 @@ export function matchToBrain(row: MediaPlanRow): OrchestratedJob {
             campaign: row.Campaign,
             publisher: row.Publisher,
             formatName: row.Format,
+            deadline: row.Deadline || "",
             specs: null,
             generatedFileName: "",
             status: "error",
@@ -146,6 +152,7 @@ export function matchToBrain(row: MediaPlanRow): OrchestratedJob {
         campaign: row.Campaign,
         publisher: row.Publisher,
         formatName: match.name,
+        deadline: row.Deadline || "",
         specs: match,
         generatedFileName: fileName,
         status: "pending",

@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useMemo, useRef, useState, Suspense } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CropFrame } from "@/components/atoms/CropFrame";
 import { Button } from "@/components/atoms/Button";
 import type { FormatData } from "@/lib/briefd/types";
 import { CATEGORIES, CATEGORY_ORDER } from "@/lib/briefd/categories";
+import { mapJobsToFormats, type UnmatchedRow } from "@/lib/briefd/mapJobs";
+import type { OrchestratedJob } from "@/lib/jobOrchestrator";
 import { FormatCardItem } from "@/components/briefd/FormatCardItem";
 import { BriefdSidebar } from "@/components/briefd/BriefdSidebar";
 import { FormatDetailView } from "@/components/briefd/FormatDetailView";
@@ -15,7 +17,7 @@ import { BriefdSpreadsheetView } from "@/components/briefd/BriefdSpreadsheetView
 import { ShareLiveBriefModal } from "@/components/briefd/ShareLiveBriefModal";
 import { PreflightLoader } from "@/components/briefd/PreflightLoader";
 import { FinaliAIModal } from "@/components/briefd/FinaliAIModal";
-import { FileSpreadsheet, Calendar as CalendarIcon, Table as TableIcon, Share2, Globe } from "lucide-react";
+import { FileSpreadsheet, Calendar as CalendarIcon, Table as TableIcon, Share2, Globe, X } from "lucide-react";
 
 // The 21 campaign formats (Bevero Black Friday 2026 Campaign)
 const CAMPAIGN_FORMATS: FormatData[] = [
@@ -385,25 +387,81 @@ const CAMPAIGN_FORMATS: FormatData[] = [
 ];
 
 // Workspace sections, derived from the single category source of truth.
-const SECTIONS = CATEGORY_ORDER.map((category) => {
-  const meta = CATEGORIES[category];
-  return {
-    ...meta,
-    id: meta.key,
-    category,
-    formats: CAMPAIGN_FORMATS.filter((f) => f.sectionCategory === category),
-  };
-});
+function buildSections(formats: FormatData[]) {
+  return CATEGORY_ORDER.map((category) => {
+    const meta = CATEGORIES[category];
+    return {
+      ...meta,
+      id: meta.key,
+      category,
+      formats: formats.filter((f) => f.sectionCategory === category),
+    };
+  }).filter((section) => section.formats.length > 0);
+}
 
 function BriefdApp() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const [viewState, setViewState] = useState<"dropzone" | "loading" | "workspace">("workspace");
+  const [viewState, setViewState] = useState<"dropzone" | "loading" | "workspace">("dropzone");
   const [activeTab, setActiveTab] = useState<"formats" | "calendar" | "table">("formats");
   const [isFinaliModalOpen, setIsFinaliModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
+  // The active plan: the bundled sample campaign, or a parsed upload.
+  const [formats, setFormats] = useState<FormatData[]>(CAMPAIGN_FORMATS);
+  const [planMeta, setPlanMeta] = useState<{ client: string; campaign: string } | null>(null);
+  const [unmatched, setUnmatched] = useState<UnmatchedRow[]>([]);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const loadSamplePlan = () => {
+    setFormats(CAMPAIGN_FORMATS);
+    setPlanMeta(null);
+    setUnmatched([]);
+    setUploadError(null);
+    setViewState("loading");
+  };
+
+  const handleFile = async (file: File) => {
+    if (!file.name.toLowerCase().endsWith(".xlsx")) {
+      setUploadError("Only .xlsx media plans are supported right now.");
+      return;
+    }
+    setUploadError(null);
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("mediaPlan", file);
+      const res = await fetch("/api/parse", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error ?? "The media plan could not be parsed.");
+      }
+      const mapped = mapJobsToFormats(data.jobs as OrchestratedJob[]);
+      if (mapped.formats.length === 0) {
+        setUploadError(
+          "No rows matched a known publisher spec. The Brain currently covers SvD, DN, Dagens Industri, JCDecaux, Clear Channel and Wall Street Media."
+        );
+        return;
+      }
+      setFormats(mapped.formats);
+      setUnmatched(mapped.unmatched);
+      setPlanMeta({
+        client: file.name.replace(/\.xlsx$/i, ""),
+        campaign: mapped.campaignName,
+      });
+      setViewState("loading");
+    } catch (err) {
+      console.error("Media plan upload failed:", err);
+      setUploadError(err instanceof Error ? err.message : "The media plan could not be parsed.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // The URL is the single source of truth for the open format detail view,
   // so browser back/forward buttons work naturally.
@@ -427,7 +485,8 @@ function BriefdApp() {
     }
   };
 
-  const selectedFormat = CAMPAIGN_FORMATS.find(f => f.id === selectedFormatId) || null;
+  const selectedFormat = formats.find(f => f.id === selectedFormatId) || null;
+  const sections = useMemo(() => buildSections(formats), [formats]);
 
   const scrollToCategory = (categoryId: string) => {
     handleSelectFormat(null);
@@ -493,9 +552,33 @@ function BriefdApp() {
             </div>
 
             {/* Clickable Drop Area (Title / Subtitle) */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx"
+              className="hidden"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFile(file);
+                e.target.value = "";
+              }}
+            />
             <div
-              onClick={() => setViewState("loading")}
-              className="w-full max-w-2xl p-12 sm:p-16 flex flex-col items-center justify-center gap-5 transition-all cursor-pointer group"
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragOver(true);
+              }}
+              onDragLeave={() => setIsDragOver(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragOver(false);
+                const file = e.dataTransfer.files?.[0];
+                if (file) handleFile(file);
+              }}
+              className={`w-full max-w-2xl p-12 sm:p-16 flex flex-col items-center justify-center gap-5 transition-all cursor-pointer group border ${
+                isDragOver ? "border-black" : "border-transparent"
+              }`}
             >
               <div className="w-16 h-16 flex items-center justify-center group-hover:opacity-70 transition-opacity">
                 <FileSpreadsheet className="w-12 h-12 text-black" />
@@ -503,17 +586,29 @@ function BriefdApp() {
 
               <div className="flex flex-col gap-1">
                 <h3 className="text-title font-bold text-black leading-tight">
-                  Drop your media plan here (.xlsx, .numbers)
+                  Drop your media plan here (.xlsx)
                 </h3>
                 <p className="text-value font-medium text-black">
-                  Or click anywhere to load and test with a sample campaign
+                  {isUploading ? "Parsing your media plan..." : "Or click anywhere to choose a file"}
                 </p>
               </div>
 
-              <Button variant="solid" size="lg" className="mt-2">
+              <Button
+                variant="solid"
+                size="lg"
+                className="mt-2"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  loadSamplePlan();
+                }}
+              >
                 Load sample media plan: Bevero Black Friday 2026
               </Button>
             </div>
+
+            {uploadError && (
+              <p className="text-value font-semibold text-plum max-w-2xl">{uploadError}</p>
+            )}
 
             <div className="flex flex-wrap items-center justify-center gap-6 text-label font-bold text-black">
               <span>Supports all agency formats</span>
@@ -534,11 +629,38 @@ function BriefdApp() {
 
         {/* VIEW 3: ACTIVE 2-COLUMN STUDIO WORKSPACE */}
         {viewState === "workspace" && (
+          <div className="w-full flex flex-col gap-6">
+            {unmatched.length > 0 && (
+              <div className="w-full bg-taupe text-yellow p-4 sm:p-5 flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-value font-bold">
+                    {unmatched.length} {unmatched.length === 1 ? "row" : "rows"} could not be matched to a known spec
+                  </span>
+                  <ul className="text-label font-semibold flex flex-col gap-0.5">
+                    {unmatched.map((row, i) => (
+                      <li key={i}>
+                        {row.publisher} — {row.format}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <button
+                  onClick={() => setUnmatched([])}
+                  title="Dismiss"
+                  className="p-1 text-yellow/80 hover:text-yellow cursor-pointer shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
           <div className="w-full flex flex-col lg:flex-row items-start gap-8">
             
             {/* Left Navigation Sidebar */}
             <BriefdSidebar
-              formats={CAMPAIGN_FORMATS}
+              formats={formats}
+              clientName={planMeta?.client}
+              campaignName={planMeta?.campaign}
               selectedFormatId={selectedFormatId}
               onSelectTab={setActiveTab}
               onSelectFormat={handleSelectFormat}
@@ -561,7 +683,7 @@ function BriefdApp() {
                           : "text-black/60 hover:text-black"
                       }`}
                     >
-                      <span>All formats ({CAMPAIGN_FORMATS.length})</span>
+                      <span>All formats ({formats.length})</span>
                     </button>
 
                     <button
@@ -602,7 +724,7 @@ function BriefdApp() {
 
                     <span className="text-label font-normal text-black/60 hidden lg:inline">
                       {activeTab === "formats"
-                        ? `${CAMPAIGN_FORMATS.length} formats in 4 categories`
+                        ? `${formats.length} formats in ${sections.length} ${sections.length === 1 ? "category" : "categories"}`
                         : activeTab === "calendar"
                         ? "Delivery schedule September 2026"
                         : "Structured media table with export"}
@@ -620,19 +742,19 @@ function BriefdApp() {
               ) : activeTab === "calendar" ? (
                 /* Production Calendar View */
                 <BriefdCalendarView
-                  formats={CAMPAIGN_FORMATS}
+                  formats={formats}
                   onSelectFormat={handleSelectFormat}
                 />
               ) : activeTab === "table" ? (
                 /* Spreadsheet / Table View */
                 <BriefdSpreadsheetView
-                  formats={CAMPAIGN_FORMATS}
+                  formats={formats}
                   onSelectFormat={handleSelectFormat}
                 />
               ) : (
                 /* Overview Stage (Proposal 3: Rich Dark Saturated Section Containers with Crisp White Format Cards) */
                 <div className="w-full flex flex-col gap-12">
-                  {SECTIONS.map((sec) => (
+                  {sections.map((sec) => (
                     <div 
                       key={sec.id} 
                       id={sec.id} 
@@ -673,6 +795,7 @@ function BriefdApp() {
             </div>
 
           </div>
+          </div>
         )}
 
       </main>
@@ -682,7 +805,7 @@ function BriefdApp() {
         <section className="w-full bg-plum text-magenta p-8 sm:p-12 md:p-14 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
           <div className="flex flex-col gap-2 max-w-2xl">
             <h3 className="text-title sm:text-section font-bold text-magenta leading-tight tracking-tight">
-              From approved layout to {CAMPAIGN_FORMATS.length} production-ready files in seconds.
+              From approved layout to {formats.length} production-ready files in seconds.
             </h3>
             <p className="text-value text-magenta mt-2 max-w-xl leading-relaxed">
               Finali connects directly to your master design file and automatically exports validated PDF/X files, DOOH sequences, and social banners matching exact publisher requirements.
@@ -736,7 +859,7 @@ function BriefdApp() {
         isOpen={isShareModalOpen} 
         onClose={() => setIsShareModalOpen(false)} 
         clientName="Bevero"
-        formatCount={CAMPAIGN_FORMATS.length}
+        formatCount={formats.length}
       />
 
     </div>

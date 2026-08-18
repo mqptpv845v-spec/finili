@@ -4,6 +4,8 @@
             "id": "svd-helsida",
             "name": "Helsida (Stående)",
             "publisher": "SvD",
+            "category": "Newsprint & Magazines (Print)",
+            "category_tag": "Print",
             "dimensions": {
                 "width_mm": 248,
                 "height_mm": 360
@@ -24,6 +26,8 @@
             "id": "dn-halvsida",
             "name": "Halvsida (Liggande)",
             "publisher": "DN",
+            "category": "Newsprint & Magazines (Print)",
+            "category_tag": "Print",
             "dimensions": {
                 "width_mm": 252,
                 "height_mm": 180
@@ -44,6 +48,8 @@
             "id": "jcdecaux-eurosize",
             "name": "Eurosize",
             "publisher": "JCDecaux",
+            "category": "Out of Home (OOH & DOOH)",
+            "category_tag": "OOH",
             "dimensions": {
                 "width_mm": 1185,
                 "height_mm": 1750
@@ -64,6 +70,8 @@
             "id": "di-weekend",
             "name": "Di Weekend Magasin",
             "publisher": "Dagens Industri",
+            "category": "Newsprint & Magazines (Print)",
+            "category_tag": "Print",
             "dimensions": {
                 "width_mm": 235,
                 "height_mm": 312
@@ -84,6 +92,8 @@
             "id": "clear-channel-play",
             "name": "Play Digital",
             "publisher": "Clear Channel",
+            "category": "Out of Home (OOH & DOOH)",
+            "category_tag": "DOOH",
             "dimensions": {
                 "width_px": 1080,
                 "height_px": 1920
@@ -104,6 +114,8 @@
             "id": "rulltrappstavla",
             "name": "Rulltrappstavla",
             "publisher": "Wall Street Media",
+            "category": "Out of Home (OOH & DOOH)",
+            "category_tag": "OOH",
             "dimensions": {
                 "width_mm": 464,
                 "height_mm": 912
