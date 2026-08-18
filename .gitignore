@@ -70,3 +70,6 @@ __MACOSX/
 
 # specific.dev local overrides
 specific.local
+
+# specific.dev local runtime state
+.specific/
