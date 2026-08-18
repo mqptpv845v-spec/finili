@@ -46,7 +46,27 @@ next-env.d.ts
 *.ai
 *.blend
 *.indd
+*.idml
 *.pdf
 *.xlsx
 *.fig
 *.sketch
+*.numbers
+*.eps
+*.ttf
+*.otf
+
+# runtime output from the InDesign pipeline
+/.tmp/
+/public/output/
+
+# macOS resource forks
+__MACOSX/
+._*
+
+# editors & local agent state
+.vscode/
+.claude/worktrees/
+
+# specific.dev local overrides
+specific.local
