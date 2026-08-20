@@ -12,7 +12,26 @@ import {
 } from "./contracts";
 import { capabilityMatches, createCapabilitySecret, hashCapabilitySecret } from "./security";
 
-export type CampaignDraft = Omit<CampaignSnapshot, "id" | "revision">;
+export interface BrainResolutionInput {
+  rowId: string;
+  kind: "brain";
+  specId: string;
+  deadline: string | null;
+  deadlineRaw?: string;
+  notes?: string;
+  metadata?: string;
+}
+
+export interface ManualResolutionInput {
+  rowId: string;
+  kind: "manual";
+  format: Omit<FormatData, "id" | "specId" | "trust" | "source" | "sourceRow">;
+}
+
+export type ResolutionInput = BrainResolutionInput | ManualResolutionInput;
+type CampaignWriteFields = Omit<CampaignSnapshot, "id" | "revision" | "formats"> & { resolutions: ResolutionInput[] };
+export type CampaignDraft = CampaignWriteFields;
+export type CampaignUpdate = CampaignWriteFields & Pick<CampaignSnapshot, "id" | "revision">;
 
 export interface StoredCampaign {
   snapshot: CampaignSnapshot;
@@ -64,6 +83,55 @@ function normalizedSnapshot(snapshot: CampaignSnapshot): CampaignSnapshot {
   return { ...structuredClone(snapshot), formats };
 }
 
+function materializeSnapshot(input: CampaignWriteFields, id: string, revision: number): CampaignSnapshot {
+  const rows = new Map(input.rows.map((row) => [row.id, row]));
+  const seen = new Set<string>();
+  const formats = input.resolutions.map((resolution): FormatData => {
+    const row = rows.get(resolution.rowId);
+    if (!row || seen.has(resolution.rowId)) throw new PersistenceError("Each resolution must reference one unique imported row.", 400);
+    seen.add(resolution.rowId);
+    if (resolution.kind === "brain") {
+      const spec = mediaSpecs.find((candidate) => candidate.id === resolution.specId);
+      if (!spec) throw new PersistenceError("Verified formats must reference a current Brain specification.", 400);
+      return sourceBackedFormat(spec, {
+        id: row.id,
+        deadline: resolution.deadline,
+        deadlineRaw: resolution.deadlineRaw ?? row.deadlineRaw,
+        sourceRow: row.source,
+        notes: resolution.notes ?? row.notes,
+        metadata: resolution.metadata,
+      });
+    }
+    return {
+      ...structuredClone(resolution.format),
+      id: row.id,
+      trust: "user-provided",
+      sourceRow: row.source,
+    };
+  });
+  const { resolutions: _resolutions, ...fields } = structuredClone(input);
+  void _resolutions;
+  return normalizedSnapshot({ ...fields, id, revision, formats });
+}
+
+export function campaignUpdateFromSnapshot(snapshot: CampaignSnapshot): CampaignUpdate {
+  const resolutions: ResolutionInput[] = snapshot.formats.map((format) => format.trust === "verified"
+    ? { rowId: format.id, kind: "brain", specId: format.specId!, deadline: format.deadline, deadlineRaw: format.deadlineRaw, notes: format.notes, metadata: format.metadata }
+    : {
+        rowId: format.id,
+        kind: "manual",
+        format: {
+          categoryTag: format.categoryTag, publisher: format.publisher, formatName: format.formatName,
+          sectionCategory: format.sectionCategory, dimensions: format.dimensions, deadline: format.deadline,
+          deadlineRaw: format.deadlineRaw, requirements: format.requirements, fileTypes: format.fileTypes,
+          notes: format.notes, metadata: format.metadata,
+        },
+      });
+  const { formats: _formats, ...fields } = structuredClone(snapshot);
+  void _formats;
+  return { ...fields, resolutions };
+}
+
 function ownerMatches(record: StoredCampaign | null, secret: string): record is StoredCampaign {
   return Boolean(record && secret && capabilityMatches(secret, record.ownerSessionHash));
 }
@@ -73,7 +141,7 @@ export class CampaignService {
 
   async createCampaign(draft: CampaignDraft): Promise<{ ownerSecret: string; response: OwnerCampaignResponse }> {
     const ownerSecret = createCapabilitySecret();
-    const snapshot = normalizedSnapshot({ ...structuredClone(draft), id: randomUUID(), revision: 1 });
+    const snapshot = materializeSnapshot(draft, randomUUID(), 1);
     const record = { snapshot, ownerSessionHash: hashCapabilitySecret(ownerSecret) };
     await this.repository.createCampaign(record);
     return { ownerSecret, response: { access: "edit", campaign: snapshot, shares: [] } };
@@ -88,14 +156,14 @@ export class CampaignService {
     return { access: "edit", campaign: record.snapshot, shares };
   }
 
-  async updateCampaign(snapshot: CampaignSnapshot, ownerSecret: string): Promise<OwnerCampaignResponse> {
-    const current = await this.repository.findCampaign(snapshot.id);
+  async updateCampaign(input: CampaignUpdate, ownerSecret: string): Promise<OwnerCampaignResponse> {
+    const current = await this.repository.findCampaign(input.id);
     if (!ownerMatches(current, ownerSecret)) throw new PersistenceError("Campaign not found.", 404);
-    if (snapshot.revision !== current.snapshot.revision) throw new PersistenceError("Campaign changed since it was loaded.", 409);
-    const next = normalizedSnapshot({ ...snapshot, revision: snapshot.revision + 1 });
-    const updated = await this.repository.replaceCampaign({ snapshot: next, ownerSessionHash: current.ownerSessionHash }, snapshot.revision);
+    if (input.revision !== current.snapshot.revision) throw new PersistenceError("Campaign changed since it was loaded.", 409);
+    const next = materializeSnapshot(input, input.id, input.revision + 1);
+    const updated = await this.repository.replaceCampaign({ snapshot: next, ownerSessionHash: current.ownerSessionHash }, input.revision);
     if (!updated) throw new PersistenceError("Campaign changed since it was loaded.", 409);
-    return this.loadOwnerCampaign(snapshot.id, ownerSecret);
+    return this.loadOwnerCampaign(input.id, ownerSecret);
   }
 
   async deleteCampaign(id: string, ownerSecret: string): Promise<void> {

@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { MediaPlanRow } from "@/lib/jobOrchestrator";
 import { mediaSpecs } from "@/lib/briefd/brain";
-import { sourceBackedFormat } from "@/lib/briefd/format";
-import { CampaignService, type CampaignDraft, type CampaignRepository, type StoredCampaign, type StoredShare } from "./service";
+import { CampaignService, campaignUpdateFromSnapshot, type CampaignDraft, type CampaignRepository, type StoredCampaign, type StoredShare } from "./service";
 
 class MemoryRepository implements CampaignRepository {
   campaigns = new Map<string, StoredCampaign>(); shares = new Map<string, StoredShare>();
@@ -22,7 +21,7 @@ class MemoryRepository implements CampaignRepository {
 
 const sourceRow: MediaPlanRow = { id: "row-1", source: { sheetName: "Plan", rowNumber: 2 }, campaign: "Launch", publisher: "LinkedIn", format: "Single Image — Square", deadline: "2026-09-24", deadlineRaw: "24 Sep 2026", notes: "", rawValues: { "1": "LinkedIn" } };
 const spec = mediaSpecs.find((item) => item.id === "linkedin-single-image-square")!;
-const draft: CampaignDraft = { clientName: "Client", campaignName: "Launch", sourceFilename: "plan.xlsx", sheetName: "Plan", headerRow: 1, columnMapping: { publisher: 1, format: 2 }, rows: [sourceRow], formats: [sourceBackedFormat(spec, { id: sourceRow.id, deadline: sourceRow.deadline, sourceRow: sourceRow.source })] };
+const draft: CampaignDraft = { clientName: "Client", campaignName: "Launch", sourceFilename: "plan.xlsx", sheetName: "Plan", headerRow: 1, columnMapping: { publisher: 1, format: 2 }, rows: [sourceRow], resolutions: [{ rowId: sourceRow.id, kind: "brain", specId: spec.id, deadline: sourceRow.deadline }] };
 const fixedNow = () => new Date("2026-08-20T12:00:00.000Z");
 
 describe("CampaignService", () => {
@@ -36,17 +35,18 @@ describe("CampaignService", () => {
 
   it("rebuilds verified fields from the Brain instead of trusting the client", async () => {
     const repository = new MemoryRepository(); const service = new CampaignService(repository, fixedNow);
-    const forged = structuredClone(draft); forged.formats[0].dimensions.width = 999999;
-    const created = await service.createCampaign(forged);
+    const created = await service.createCampaign(draft);
     expect(created.response.campaign.formats[0].dimensions.width).toBe(spec.dimensions.width_px);
+    expect(created.response.campaign.formats[0].publisher).toBe(spec.publisher);
+    expect("format" in draft.resolutions[0]).toBe(false);
   });
 
   it("uses optimistic revisions for updates", async () => {
     const repository = new MemoryRepository(); const service = new CampaignService(repository, fixedNow);
     const created = await service.createCampaign(draft); const snapshot = created.response.campaign;
-    const updated = await service.updateCampaign({ ...snapshot, campaignName: "Updated" }, created.ownerSecret);
+    const updated = await service.updateCampaign(campaignUpdateFromSnapshot({ ...snapshot, campaignName: "Updated" }), created.ownerSecret);
     expect(updated.campaign).toMatchObject({ campaignName: "Updated", revision: 2 });
-    await expect(service.updateCampaign(snapshot, created.ownerSecret)).rejects.toMatchObject({ status: 409 });
+    await expect(service.updateCampaign(campaignUpdateFromSnapshot(snapshot), created.ownerSecret)).rejects.toMatchObject({ status: 409 });
   });
 
   it("creates redacted view-only links and makes revocation immediate", async () => {
@@ -61,7 +61,7 @@ describe("CampaignService", () => {
 
   it("blocks shares while rows remain unresolved and invalidates links on deletion", async () => {
     const repository = new MemoryRepository(); const service = new CampaignService(repository, fixedNow);
-    const unresolved = await service.createCampaign({ ...draft, formats: [] });
+    const unresolved = await service.createCampaign({ ...draft, resolutions: [] });
     await expect(service.createShare(unresolved.response.campaign.id, unresolved.ownerSecret)).rejects.toMatchObject({ status: 409 });
     const created = await service.createCampaign(draft); const share = await service.createShare(created.response.campaign.id, created.ownerSecret);
     await service.deleteCampaign(created.response.campaign.id, created.ownerSecret);
