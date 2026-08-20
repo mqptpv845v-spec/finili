@@ -91,7 +91,7 @@ export function assertCampaignSnapshot(value: unknown): asserts value is Campaig
     if (format.sourceRow && (format.sourceRow.sheetName !== matchingRow.source.sheetName || format.sourceRow.rowNumber !== matchingRow.source.rowNumber)) throw new Error("Format source row must match its imported row.");
     if (format.trust === "verified" && (!format.specId || !format.source)) throw new Error("Verified formats require a Brain spec and source evidence.");
     if (format.trust === "user-provided" && (format.specId || format.source)) throw new Error("User-provided formats cannot claim verified evidence.");
-    if (format.source && (!format.source.url.startsWith("https://") || !ISO_DATE.test(format.source.verifiedAt) || !SOURCE_AUTHORITIES.has(format.source.authority))) throw new Error("Format source evidence is invalid.");
+    if (format.source && (!format.source.url.startsWith("https://") || !isIsoDate(format.source.verifiedAt) || !SOURCE_AUTHORITIES.has(format.source.authority))) throw new Error("Format source evidence is invalid.");
     formatIds.add(format.id);
   }
 }
@@ -104,7 +104,12 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 function isRecord(value: unknown): value is Record<string, unknown> { return Boolean(value && typeof value === "object" && !Array.isArray(value)); }
 function isStringRecord(value: unknown): value is Record<string, string> { return isRecord(value) && Object.values(value).every((entry) => typeof entry === "string"); }
-function isIsoDateOrNull(value: unknown): value is string | null { return value === null || (typeof value === "string" && ISO_DATE.test(value)); }
+function isIsoDate(value: unknown): value is string {
+  if (typeof value !== "string" || !ISO_DATE.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+function isIsoDateOrNull(value: unknown): value is string | null { return value === null || isIsoDate(value); }
 function validRequirementValue(value: unknown): boolean {
   return value === undefined || (typeof value === "number" && Number.isFinite(value) && value >= 0) || (Array.isArray(value) && value.every((entry) => typeof entry === "number" && Number.isFinite(entry) && entry >= 0)) || typeof value === "string";
 }

@@ -165,6 +165,17 @@ describe("Briefd campaign API routes", () => {
     expect(service.createCampaign).not.toHaveBeenCalled();
   });
 
+  it("rejects impossible calendar dates before persistence", async () => {
+    const response = await createCampaign(jsonRequest("/api/campaigns", "POST", {
+      ...draft,
+      rows: [{ ...row, deadline: "2026-02-31" }],
+    }));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: "Campaign payload is invalid." });
+    expect(service.createCampaign).not.toHaveBeenCalled();
+  });
+
   it("loads an owner campaign only when its per-campaign cookie is present", async () => {
     const response = await getCampaign(ownerRequest(`/api/campaigns/${CAMPAIGN_ID}`, "GET"), context({ id: CAMPAIGN_ID }));
     expect(response.status).toBe(200);
