@@ -92,6 +92,30 @@ describe("parseExcelBuffer", () => {
         expect(plan.rows[0].deadlineRaw).not.toContain("GMT");
     });
 
+    it("keeps impossible calendar dates unresolved instead of normalizing them", async () => {
+        const buffer = await buildWorkbook(
+            ["Campaign", "Publisher", "Format", "Deadline"],
+            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height", "2026-02-31"]],
+        );
+        const plan = await parseExcelBuffer(buffer);
+        expect(plan.rows[0].deadline).toBeNull();
+        expect(plan.rows[0].deadlineRaw).toBe("2026-02-31");
+    });
+
+    it("detects the header within an explicitly selected worksheet", async () => {
+        const buffer = await workbookBuffer((workbook) => {
+            workbook.addWorksheet("Cover").addRow(["Campaign", "Publisher", "Format"]);
+            const plan = workbook.addWorksheet("Selected plan");
+            plan.addRow(["Prepared by agency"]);
+            plan.addRow([]);
+            plan.addRow(["Campaign", "Publisher", "Format"]);
+            plan.addRow(["Launch", "LinkedIn", "Square single image ad"]);
+        });
+        const result = await parseExcelBuffer(buffer, { sheetName: "Selected plan" });
+        expect(result.headerRow).toBe(3);
+        expect(result.rows[0]).toMatchObject({ campaign: "Launch", publisher: "LinkedIn" });
+    });
+
     it("accepts an explicit column mapping and keeps incomplete rows for correction", async () => {
         const buffer = await buildWorkbook(
             ["Kunddata", "Leverans", "Storlek"],

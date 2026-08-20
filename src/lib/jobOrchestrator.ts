@@ -146,6 +146,18 @@ function detectSheetAndHeader(workbook: ExcelJS.Workbook): {
     return best;
 }
 
+function detectHeaderInWorksheet(worksheet: ExcelJS.Worksheet): { headerRow: number; mapping: MediaPlanColumnMapping } {
+    let best: { headerRow: number; mapping: MediaPlanColumnMapping; score: number } | null = null;
+    const finalRow = Math.min(worksheet.actualRowCount || worksheet.rowCount, HEADER_SCAN_LIMIT);
+    for (let rowNumber = 1; rowNumber <= finalRow; rowNumber += 1) {
+        const mapping = mappingForRow(worksheet.getRow(rowNumber));
+        const score = mappingScore(mapping);
+        if (!best || score > best.score) best = { headerRow: rowNumber, mapping, score };
+    }
+    if (!best || best.score === 0) throw new Error(`No recognizable media-plan header row was found in worksheet ${worksheet.name}.`);
+    return best;
+}
+
 function getWorksheet(workbook: ExcelJS.Workbook, sheetName: string): ExcelJS.Worksheet {
     const worksheet = workbook.getWorksheet(sheetName);
     if (!worksheet) throw new Error(`Worksheet not found: ${sheetName}`);
@@ -170,6 +182,13 @@ function isValidDate(date: Date): boolean {
     return !Number.isNaN(date.getTime());
 }
 
+function exactDate(year: number, month: number, day: number): Date | null {
+    const date = new Date(year, month - 1, day);
+    return isValidDate(date) && date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
+        ? date
+        : null;
+}
+
 function toIsoDate(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -183,14 +202,14 @@ function parseStringDate(value: string): string | null {
 
     const isoMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
     if (isoMatch) {
-        const date = new Date(Number(isoMatch[1]), Number(isoMatch[2]) - 1, Number(isoMatch[3]));
-        return isValidDate(date) ? toIsoDate(date) : null;
+        const date = exactDate(Number(isoMatch[1]), Number(isoMatch[2]), Number(isoMatch[3]));
+        return date ? toIsoDate(date) : null;
     }
 
     const numericMatch = trimmed.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
     if (numericMatch) {
-        const date = new Date(Number(numericMatch[3]), Number(numericMatch[2]) - 1, Number(numericMatch[1]));
-        return isValidDate(date) ? toIsoDate(date) : null;
+        const date = exactDate(Number(numericMatch[3]), Number(numericMatch[2]), Number(numericMatch[1]));
+        return date ? toIsoDate(date) : null;
     }
 
     const parsed = new Date(trimmed);
@@ -246,7 +265,9 @@ export async function parseExcelBuffer(
         : workbook.worksheets[0];
     const detected = options.headerRow != null && options.mapping
         ? null
-        : detectSheetAndHeader(workbook);
+        : options.sheetName
+            ? { worksheet: explicitlySelectedWorksheet, ...detectHeaderInWorksheet(explicitlySelectedWorksheet) }
+            : detectSheetAndHeader(workbook);
     const worksheet = options.sheetName
         ? explicitlySelectedWorksheet
         : detected?.worksheet ?? explicitlySelectedWorksheet;

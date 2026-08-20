@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { matchToBrain, type MediaPlanRow } from "@/lib/jobOrchestrator";
 import { mapJobsToFormats } from "./mapJobs";
+import { formatDeadline, formatDimensions, formatRequirements, ratioLabel } from "./format";
 
 function mediaPlanRow(overrides: Partial<MediaPlanRow> = {}): MediaPlanRow {
     return {
@@ -27,11 +28,13 @@ describe("mapJobsToFormats", () => {
         const card = formats[0];
         expect(card.sectionCategory).toBe("Newsprint & Magazines (Print)");
         expect(card.categoryTag).toBe("Print");
-        expect(card.dimensions).toBe("522 × 372 mm");
-        expect(card.deadline).toBe("24 Sep");
-        expect(card.safeZone).toBe("None");
-        expect(card.fileType).toBe("PDF");
-        expect(card.specsUrl).toContain("dn.ocast.com");
+        expect(formatDimensions(card.dimensions)).toBe("522 × 372 mm");
+        expect(formatDeadline(card.deadline)).toBe("24 Sept");
+        expect(formatRequirements(card.requirements)).toBe("Max 10240 KB");
+        expect(card.fileTypes).toEqual(["PDF"]);
+        expect(card.source?.url).toContain("dn.ocast.com");
+        expect(card.trust).toBe("verified");
+        expect(card.sourceRow).toEqual({ sheetName: "Mediaplan", rowNumber: 2 });
     });
 
     it("uses pixel dimensions and simplified ratios for digital specs", () => {
@@ -43,9 +46,9 @@ describe("mapJobsToFormats", () => {
             deadlineRaw: "",
         }));
         const { formats } = mapJobsToFormats([job]);
-        expect(formats[0].dimensions).toBe("1080 × 1920 px");
-        expect(formats[0].ratioLabel).toBe("9:16");
-        expect(formats[0].deadline).toBe("TBD");
+        expect(formatDimensions(formats[0].dimensions)).toBe("1080 × 1920 px");
+        expect(ratioLabel(formats[0].dimensions)).toBe("9:16");
+        expect(formatDeadline(formats[0].deadline)).toBe("TBD");
     });
 
     it("reports unmatched rows separately instead of faking cards", () => {

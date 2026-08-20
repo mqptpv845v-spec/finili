@@ -100,6 +100,8 @@ export function BriefdSidebar({
                   onClick={() => toggleCategory(cat.name)}
                   className="p-1 text-black hover:opacity-60 cursor-pointer flex items-center gap-1 shrink-0"
                   title={isOpen ? "Collapse section" : "Expand section"}
+                  aria-expanded={isOpen}
+                  aria-label={`${isOpen ? "Collapse" : "Expand"} ${cat.title}`}
                 >
                   <span className="text-label font-bold text-black/60">{catFormats.length}</span>
                   {isOpen ? (
@@ -135,8 +137,8 @@ export function BriefdSidebar({
                         {/* Geometric Symbol on the Right */}
                         <div className="shrink-0">
                           <GeometricGlyph
-                            widthRatio={item.widthRatio}
-                            heightRatio={item.heightRatio}
+                            widthRatio={item.dimensions.width}
+                            heightRatio={item.dimensions.height}
                             size="inline"
                           />
                         </div>
@@ -164,7 +166,7 @@ export function BriefdSidebar({
 
         <div className="flex items-center justify-center gap-1.5 text-label text-black/60 text-center pt-0.5">
           <span className="w-1.5 h-1.5 rounded-full bg-petrol shrink-0" />
-          <span>{formats.length} formats · Live sync active</span>
+          <span>{formats.length} resolved formats</span>
         </div>
       </div>
 
