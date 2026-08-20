@@ -196,6 +196,16 @@ function toIsoDate(date: Date): string {
     return `${year}-${month}-${day}`;
 }
 
+function toExcelCalendarDate(date: Date): string {
+    const isUtcMidnight = date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0 && date.getUTCMilliseconds() === 0;
+    if (isUtcMidnight) return toIsoDate(date);
+    const isLocalMidnight = date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0 && date.getMilliseconds() === 0;
+    if (isLocalMidnight) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+    return toIsoDate(date);
+}
+
 function parseStringDate(value: string): string | null {
     const trimmed = value.trim();
     if (!trimmed) return null;
@@ -239,14 +249,14 @@ function deadlineValue(cell: ExcelJS.Cell | undefined): { iso: string | null; ra
     if (!cell) return { iso: null, raw: "" };
     const value = cell.value;
     if (value instanceof Date) {
-        const iso = toIsoDate(value);
+        const iso = toExcelCalendarDate(value);
         return { iso, raw: iso };
     }
 
     if (value && typeof value === "object" && "result" in value) {
         const result = value.result;
         if (result instanceof Date) {
-            const iso = toIsoDate(result);
+            const iso = toExcelCalendarDate(result);
             return { iso, raw: iso };
         }
     }

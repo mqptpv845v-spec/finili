@@ -101,6 +101,15 @@ describe("parseExcelBuffer", () => {
         expect(plan.rows[0].deadline).toBe("2026-09-24");
     });
 
+    it("preserves local-midnight dates in programmatically generated workbooks", async () => {
+        const buffer = await buildWorkbook(
+            ["Campaign", "Publisher", "Format", "Deadline"],
+            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height", new Date(2026, 8, 24)]],
+        );
+        const plan = await parseExcelBuffer(buffer);
+        expect(plan.rows[0].deadline).toBe("2026-09-24");
+    });
+
     it("keeps impossible calendar dates unresolved instead of normalizing them", async () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format", "Deadline"],
