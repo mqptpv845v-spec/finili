@@ -89,7 +89,7 @@ export const CATEGORIES: Record<SectionCategory, CategoryMeta> = {
     number: "04",
     title: "Printed Media",
     shortLabel: "Printed Media",
-    description: "Dagens industri tabloid, half page and magazine with ICC profiles",
+    description: "Publisher-specified print dimensions and recorded delivery requirements",
     stripe: "bg-light border-b border-black/10",
     dot: "bg-graphite",
     hoverBg: "hover:bg-light",

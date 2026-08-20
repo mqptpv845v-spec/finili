@@ -29,7 +29,7 @@ A deterministic production engine:
 
 ## The three pillars
 
-1. **The spec database ("The Brain")** — currently 12 provisional, cited publisher-format combinations across LinkedIn, Google Display, JCDecaux, Bauer Media Outdoor, and Dagens Nyheter. Records include only requirements supported by their cited sources. Continuous verification and useful market coverage are goals, not current claims. In code: `src/lib/data/brain.json`.
+1. **The spec database ("The Brain")** — currently 12 provisional, cited publisher-format combinations across LinkedIn, Google Display, JCDecaux, Bauer Media Outdoor, and Ena Håbo-Tidningen. Records include only requirements supported by their cited sources. Continuous verification and useful market coverage are goals, not current claims. In code: `src/lib/data/brain.json`.
 2. **Automated file generation** — `.idml` is open XML in a ZIP, so parsing and text injection are cheap server-side. Generative expand only for extreme ratio changes. PDF/X render at export.
 3. **Human-in-the-loop approval** — the legal and quality shield described above.
 

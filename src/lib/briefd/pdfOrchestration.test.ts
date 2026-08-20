@@ -8,7 +8,7 @@ function row(publisher: string, format: string): MediaPlanRow {
 
 describe("local PDF orchestration", () => {
   it("keeps print PDF jobs exportable", () => {
-    const [job] = markUnsupportedPdfJobs([matchToBrain(row("Dagens Nyheter", "News Spread — Full Height"))]);
+    const [job] = markUnsupportedPdfJobs([matchToBrain(row("Ena Håbo-Tidningen", "Print Spread"))]);
     expect(job.status).toBe("pending");
     expect(job.generatedFileName).toMatch(/\.pdf$/);
   });

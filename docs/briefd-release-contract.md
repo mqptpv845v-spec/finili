@@ -21,7 +21,7 @@ Coverage is measured in named publisher-format combinations, not publisher count
 | Display | Google Display | 300 × 250, Sweden 980 × 120 panorama, 320 × 100 |
 | OOH / DOOH | JCDecaux | Eurosize inclusive print, Digisize portrait |
 | OOH / DOOH | Bauer Media Outdoor | Digital Adshel, Digital Billboard HD |
-| Print | Dagens Nyheter | News spread full height, news spread half height |
+| Print | Ena Håbo-Tidningen | Print spread, print full page |
 
 Every record carries its source URL, authority class, and verification date. Unknown requirements are omitted rather than represented as zero. Publisher aliases reflect current branding where supported—for example, Bauer Media Outdoor accepts the former Clear Channel name as an input alias without changing the verified publisher identity shown to the user.
 
@@ -33,8 +33,7 @@ Every record carries its source URL, authority class, and verification date. Unk
 - JCDecaux Digisize: <https://jcdecaux.se/wp-content/uploads/2025/08/Digisize-Materialspecifikation-Staende-2025-1.pdf>
 - Bauer Media Outdoor Digital Adshel: <https://www.bauermediaoutdoor.se/specifikationer/digital-adshel>
 - Bauer Media Outdoor Digital Billboard: <https://www.bauermediaoutdoor.se/en/specifications/digital-billboard>
-- Dagens Nyheter News formats: <https://dn.ocast.com/sv/products/3336/nyheter>
-- Dagens Nyheter daily press requirements: <https://dn.ocast.com/specifications/-284>
+- Ena Håbo-Tidningen 2026 print formats and material requirements: <https://www.vasterastidning.se/files/2026/03/26/Prislista%20Fo%CC%88r%20Ena%20Ha%CC%8Abo-tidningen%202026.pdf>
 
 The repository also contains a Bauer Media Outdoor Station Domination campaign email and specification link. That specification requires a separately supplied InDesign template and does not publish the installation dimensions, so it is evidence for workbook fixtures and workflow requirements but is deliberately not represented as a dimension-complete Brain format.
 

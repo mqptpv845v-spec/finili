@@ -209,56 +209,44 @@
       ]
     },
     {
-      "id": "dn-news-spread-full-height",
-      "name": "News Spread — Full Height",
-      "aliases": ["news spread full height", "uppslag helsida", "522x372", "522 × 372"],
-      "publisher": "Dagens Nyheter",
-      "publisher_aliases": ["DN", "DN Print"],
+      "id": "ena-habo-print-spread",
+      "name": "Print Spread",
+      "aliases": ["print spread", "uppslag", "full spread", "522x372", "522 × 372"],
+      "publisher": "Ena Håbo-Tidningen",
+      "publisher_aliases": ["Ena Håbo", "Ena Habo", "Ena Habo-Tidningen"],
       "category": "Newsprint & Magazines (Print)",
       "category_tag": "Print",
       "dimensions": { "width_mm": 522, "height_mm": 372 },
-      "color": { "icc_profile": "WAN-IFRAnewspaper26v5.icc", "color_space": "CMYK", "max_ink_percent": 230 },
-      "delivery": { "file_types": ["PDF"], "max_file_size_kb": 10240, "resolution_dpi": 200 },
-      "naming_convention": "{{Campaign}}_DN_News_Spread_522x372_{{Date}}.pdf",
+      "color": { "color_space": "CMYK" },
+      "delivery": { "file_types": ["PDF", "EPS"], "resolution_dpi": 200 },
+      "naming_convention": "{{Campaign}}_EnaHabo_Print_Spread_522x372_{{Date}}.pdf",
       "sources": [
         {
-          "title": "Dagens Nyheter News print formats",
-          "url": "https://dn.ocast.com/sv/products/3336/nyheter",
+          "title": "Ena Håbo-Tidningen 2026 print price list and material requirements",
+          "url": "https://www.vasterastidning.se/files/2026/03/26/Prislista%20Fo%CC%88r%20Ena%20Ha%CC%8Abo-tidningen%202026.pdf",
           "verified_at": "2026-08-20",
-          "authority": "publisher-profile"
-        },
-        {
-          "title": "Dagens Nyheter daily press material specification",
-          "url": "https://dn.ocast.com/specifications/-284",
-          "verified_at": "2026-08-20",
-          "authority": "publisher-profile"
+          "authority": "publisher"
         }
       ]
     },
     {
-      "id": "dn-news-spread-half-height",
-      "name": "News Spread — Half Height",
-      "aliases": ["news spread half height", "uppslag halvsida", "522x178", "522 × 178"],
-      "publisher": "Dagens Nyheter",
-      "publisher_aliases": ["DN", "DN Print"],
+      "id": "ena-habo-print-full-page",
+      "name": "Print Full Page",
+      "aliases": ["print full page", "helsida", "full page", "module 68", "248x372", "248 × 372"],
+      "publisher": "Ena Håbo-Tidningen",
+      "publisher_aliases": ["Ena Håbo", "Ena Habo", "Ena Habo-Tidningen"],
       "category": "Newsprint & Magazines (Print)",
       "category_tag": "Print",
-      "dimensions": { "width_mm": 522, "height_mm": 178 },
-      "color": { "icc_profile": "WAN-IFRAnewspaper26v5.icc", "color_space": "CMYK", "max_ink_percent": 230 },
-      "delivery": { "file_types": ["PDF"], "max_file_size_kb": 10240, "resolution_dpi": 200 },
-      "naming_convention": "{{Campaign}}_DN_News_Spread_522x178_{{Date}}.pdf",
+      "dimensions": { "width_mm": 248, "height_mm": 372 },
+      "color": { "color_space": "CMYK" },
+      "delivery": { "file_types": ["PDF", "EPS"], "resolution_dpi": 200 },
+      "naming_convention": "{{Campaign}}_EnaHabo_Print_FullPage_248x372_{{Date}}.pdf",
       "sources": [
         {
-          "title": "Dagens Nyheter News print formats",
-          "url": "https://dn.ocast.com/sv/products/3336/nyheter",
+          "title": "Ena Håbo-Tidningen 2026 print price list and material requirements",
+          "url": "https://www.vasterastidning.se/files/2026/03/26/Prislista%20Fo%CC%88r%20Ena%20Ha%CC%8Abo-tidningen%202026.pdf",
           "verified_at": "2026-08-20",
-          "authority": "publisher-profile"
-        },
-        {
-          "title": "Dagens Nyheter daily press material specification",
-          "url": "https://dn.ocast.com/specifications/-284",
-          "verified_at": "2026-08-20",
-          "authority": "publisher-profile"
+          "authority": "publisher"
         }
       ]
     }

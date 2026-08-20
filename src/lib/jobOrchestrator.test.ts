@@ -30,8 +30,8 @@ function mediaPlanRow(overrides: Partial<MediaPlanRow> = {}): MediaPlanRow {
         id: "row-2-test",
         source: { sheetName: "Mediaplan", rowNumber: 2 },
         campaign: "Black Friday",
-        publisher: "Dagens Nyheter",
-        format: "News Spread — Full Height",
+        publisher: "Ena Håbo-Tidningen",
+        format: "Print Spread",
         deadline: "2026-09-24",
         deadlineRaw: "24 Sep 2026",
         notes: "",
@@ -44,7 +44,7 @@ describe("parseExcelBuffer", () => {
     it("reads English column names and preserves source identity", async () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format", "Notes"],
-            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height", "rush"]],
+            [["Black Friday", "Ena Håbo-Tidningen", "Print Spread", "rush"]],
         );
         const plan = await parseExcelBuffer(buffer);
 
@@ -54,8 +54,8 @@ describe("parseExcelBuffer", () => {
         expect(plan.rows[0]).toMatchObject({
             source: { sheetName: "Mediaplan", rowNumber: 2 },
             campaign: "Black Friday",
-            publisher: "Dagens Nyheter",
-            format: "News Spread — Full Height",
+            publisher: "Ena Håbo-Tidningen",
+            format: "Print Spread",
             notes: "rush",
         });
         expect(plan.rows[0].id).toMatch(/^row-2-[a-f0-9]{12}$/);
@@ -129,7 +129,7 @@ describe("parseExcelBuffer", () => {
     it("normalizes genuine Excel dates without leaking timezone display text", async () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format", "Deadline"],
-            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height", new Date(Date.UTC(2026, 8, 24))]],
+            [["Black Friday", "Ena Håbo-Tidningen", "Print Spread", new Date(Date.UTC(2026, 8, 24))]],
         );
         const plan = await parseExcelBuffer(buffer);
         expect(plan.rows[0].deadline).toBe("2026-09-24");
@@ -139,7 +139,7 @@ describe("parseExcelBuffer", () => {
     it("treats Excel date objects as UTC date-only values", async () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format", "Deadline"],
-            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height", new Date("2026-09-24T00:00:00.000Z")]],
+            [["Black Friday", "Ena Håbo-Tidningen", "Print Spread", new Date("2026-09-24T00:00:00.000Z")]],
         );
         const plan = await parseExcelBuffer(buffer);
         expect(plan.rows[0].deadline).toBe("2026-09-24");
@@ -148,7 +148,7 @@ describe("parseExcelBuffer", () => {
     it("preserves local-midnight dates in programmatically generated workbooks", async () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format", "Deadline"],
-            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height", new Date(2026, 8, 24)]],
+            [["Black Friday", "Ena Håbo-Tidningen", "Print Spread", new Date(2026, 8, 24)]],
         );
         const plan = await parseExcelBuffer(buffer);
         expect(plan.rows[0].deadline).toBe("2026-09-24");
@@ -157,7 +157,7 @@ describe("parseExcelBuffer", () => {
     it("keeps impossible calendar dates unresolved instead of normalizing them", async () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format", "Deadline"],
-            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height", "2026-02-31"]],
+            [["Black Friday", "Ena Håbo-Tidningen", "Print Spread", "2026-02-31"]],
         );
         const plan = await parseExcelBuffer(buffer);
         expect(plan.rows[0].deadline).toBeNull();
@@ -168,8 +168,8 @@ describe("parseExcelBuffer", () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format", "Deadline"],
             [
-                ["Black Friday", "Dagens Nyheter", "News Spread — Full Height", "24 Sep 2026"],
-                ["Spring", "Dagens Nyheter", "News Spread — Half Height", "4 mars 2027"],
+                ["Black Friday", "Ena Håbo-Tidningen", "Print Spread", "24 Sep 2026"],
+                ["Spring", "Ena Håbo-Tidningen", "Print Full Page", "4 mars 2027"],
                 ["Ambiguous", "LinkedIn", "Square single image ad", "24 Sep"],
             ],
         );
@@ -194,7 +194,7 @@ describe("parseExcelBuffer", () => {
     it("accepts an explicit column mapping and keeps incomplete rows for correction", async () => {
         const buffer = await buildWorkbook(
             ["Kunddata", "Leverans", "Storlek"],
-            [["Vårkampanj", "Dagens Nyheter", "News Spread — Full Height"], ["Höstkampanj", "", "Halvsida"]],
+            [["Vårkampanj", "Ena Håbo-Tidningen", "Print Spread"], ["Höstkampanj", "", "Halvsida"]],
         );
         const plan = await parseExcelBuffer(buffer, {
             headerRow: 1,
@@ -208,7 +208,7 @@ describe("parseExcelBuffer", () => {
     it("keeps stable ids across equivalent parses", async () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format"],
-            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height"]],
+            [["Black Friday", "Ena Håbo-Tidningen", "Print Spread"]],
         );
         const first = await parseExcelBuffer(buffer);
         const second = await parseExcelBuffer(buffer);
@@ -218,7 +218,7 @@ describe("parseExcelBuffer", () => {
     it("skips empty rows and rejects workbooks without recognizable headers", async () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format"],
-            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height"], ["", "", ""]],
+            [["Black Friday", "Ena Håbo-Tidningen", "Print Spread"], ["", "", ""]],
         );
         expect((await parseExcelBuffer(buffer)).rows).toHaveLength(1);
 
@@ -262,15 +262,15 @@ describe("matchToBrain", () => {
     it("matches an exact publisher and format", () => {
         const job = matchToBrain(mediaPlanRow());
         expect(job.status).toBe("pending");
-        expect(job.specs?.id).toBe("dn-news-spread-full-height");
+        expect(job.specs?.id).toBe("ena-habo-print-spread");
         expect(job.id).toBe("row-2-test");
         expect(job.matchConfidence).toBe("canonical");
     });
 
     it("matches curated publisher and format aliases", () => {
-        const job = matchToBrain(mediaPlanRow({ publisher: "DN", format: "522x178" }));
+        const job = matchToBrain(mediaPlanRow({ publisher: "Ena Habo", format: "248x372" }));
         expect(job.status).toBe("pending");
-        expect(job.specs?.id).toBe("dn-news-spread-half-height");
+        expect(job.specs?.id).toBe("ena-habo-print-full-page");
         expect(job.matchConfidence).toBe("alias");
     });
 

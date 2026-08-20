@@ -8,8 +8,8 @@ function mediaPlanRow(overrides: Partial<MediaPlanRow> = {}): MediaPlanRow {
         id: "row-2-test",
         source: { sheetName: "Mediaplan", rowNumber: 2 },
         campaign: "Black Friday",
-        publisher: "Dagens Nyheter",
-        format: "News Spread — Full Height",
+        publisher: "Ena Håbo-Tidningen",
+        format: "Print Spread",
         deadline: "2026-09-24",
         deadlineRaw: "2026-09-24",
         notes: "",
@@ -30,9 +30,10 @@ describe("mapJobsToFormats", () => {
         expect(card.categoryTag).toBe("Print");
         expect(formatDimensions(card.dimensions)).toBe("522 × 372 mm");
         expect(formatDeadline(card.deadline)).toBe("24 Sept");
-        expect(formatRequirements(card.requirements)).toBe("Max 10240 KB");
-        expect(card.fileTypes).toEqual(["PDF"]);
-        expect(card.source?.url).toContain("dn.ocast.com");
+        expect(formatRequirements(card.requirements)).toBe("No additional requirement recorded");
+        expect(card.requirements).toMatchObject({ resolutionDpi: 200, colorProfile: "CMYK" });
+        expect(card.fileTypes).toEqual(["PDF", "EPS"]);
+        expect(card.source?.url).toContain("vasterastidning.se");
         expect(card.trust).toBe("verified");
         expect(card.sourceRow).toEqual({ sheetName: "Mediaplan", rowNumber: 2 });
     });
