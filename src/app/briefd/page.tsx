@@ -115,7 +115,7 @@ function BriefdApp() {
         <p className="text-label text-black/60 max-w-xl">Uploads are parsed locally by this running app. Real agency-plan validation and external sharing are not yet claimed.</p>
       </div>}
 
-      {viewState === "review" && plan && sourceFile && <ImportReview plan={plan} matched={formats} unmatched={unmatched} busy={busy} onResolve={resolveRow} onContinue={() => setViewState("workspace")} onReparse={(settings) => parseFile(sourceFile, settings)} />}
+      {viewState === "review" && plan && sourceFile && <ImportReview plan={plan} matched={formats} unmatched={unmatched} busy={busy} error={uploadError} onResolve={resolveRow} onContinue={() => setViewState("workspace")} onReparse={(settings) => parseFile(sourceFile, settings)} />}
 
       {viewState === "workspace" && <div className="w-full flex flex-col lg:flex-row items-start gap-8">
         <BriefdSidebar formats={formats} clientName={planMeta.client} campaignName={planMeta.campaign} selectedFormatId={selectedFormatId} onSelectTab={setActiveTab} onSelectFormat={selectFormat} onSelectCategory={scrollToCategory} onResetPlan={reset} />
