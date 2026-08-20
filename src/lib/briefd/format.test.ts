@@ -4,6 +4,7 @@ import { resolveManually, resolveWithSpec } from "./corrections";
 import { buildCalendarMonth, formatsByDeadline, moveMonth } from "./calendar";
 import { deadlineSortValue, formatDimensions, ratioLabel } from "./format";
 import { formatsToCsv, safeExportName, sortFormats } from "./table";
+import { CATEGORY_TAGS } from "./categories";
 import type { UnmatchedRow } from "./mapJobs";
 
 const row: UnmatchedRow = {
@@ -21,6 +22,7 @@ describe("Briefd format helpers", () => {
     expect(formatDimensions({ width: 1080, height: 1920, unit: "px" })).toBe("1080 × 1920 px");
     expect(ratioLabel({ width: 1080, height: 1920, unit: "px" })).toBe("9:16");
     expect(deadlineSortValue(null)).toBe(Number.POSITIVE_INFINITY);
+    expect(CATEGORY_TAGS["Social Media (SoMe)"]).toBe("SoMe");
   });
 
   it("marks Brain assignments verified and manual corrections user-provided", () => {

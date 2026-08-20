@@ -111,6 +111,19 @@ describe("parseExcelBuffer", () => {
         expect(plan.rows[0].deadlineRaw).toBe("2026-02-31");
     });
 
+    it("parses explicit named date text without host timezone shifts", async () => {
+        const buffer = await buildWorkbook(
+            ["Campaign", "Publisher", "Format", "Deadline"],
+            [
+                ["Black Friday", "Dagens Nyheter", "News Spread — Full Height", "24 Sep 2026"],
+                ["Spring", "Dagens Nyheter", "News Spread — Half Height", "4 mars 2027"],
+                ["Ambiguous", "LinkedIn", "Square single image ad", "24 Sep"],
+            ],
+        );
+        const plan = await parseExcelBuffer(buffer);
+        expect(plan.rows.map((row) => row.deadline)).toEqual(["2026-09-24", "2027-03-04", null]);
+    });
+
     it("detects the header within an explicitly selected worksheet", async () => {
         const buffer = await workbookBuffer((workbook) => {
             workbook.addWorksheet("Cover").addRow(["Campaign", "Publisher", "Format"]);

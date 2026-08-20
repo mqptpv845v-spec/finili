@@ -6,7 +6,7 @@ import { mediaSpecs } from "@/lib/briefd/brain";
 import type { FormatData, SectionCategory } from "@/lib/briefd/types";
 import type { UnmatchedRow } from "@/lib/briefd/mapJobs";
 import { resolveManually, resolveWithSpec } from "@/lib/briefd/corrections";
-import { CATEGORIES, CATEGORY_ORDER } from "@/lib/briefd/categories";
+import { CATEGORY_ORDER, CATEGORY_TAGS } from "@/lib/briefd/categories";
 import { Button } from "@/components/atoms/Button";
 
 const FIELDS: { key: MediaPlanField; label: string; required?: boolean }[] = [
@@ -39,7 +39,7 @@ function ResolutionForm({ row, onResolve }: { row: UnmatchedRow; onResolve: (for
     try {
       onResolve(mode === "spec" ? resolveWithSpec(row, specId) : resolveManually(row, {
         publisher, formatName: name, width: Number(width), height: Number(height), unit,
-        deadline: deadline || null, sectionCategory: category, categoryTag: CATEGORIES[category].shortLabel === "Social" ? "SoMe" : category === "Out of Home (OOH & DOOH)" ? "OOH" : category === "Newsprint & Magazines (Print)" ? "Print" : "Display",
+        deadline: deadline || null, sectionCategory: category, categoryTag: CATEGORY_TAGS[category],
       }));
       setError(null);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "Could not resolve this row."); }

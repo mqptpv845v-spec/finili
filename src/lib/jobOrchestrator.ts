@@ -212,8 +212,27 @@ function parseStringDate(value: string): string | null {
         return date ? toIsoDate(date) : null;
     }
 
-    const parsed = new Date(trimmed);
-    return isValidDate(parsed) ? toIsoDate(parsed) : null;
+    const monthNames: Record<string, number> = {
+        jan: 1, january: 1, januari: 1,
+        feb: 2, february: 2, februari: 2,
+        mar: 3, march: 3, mars: 3,
+        apr: 4, april: 4,
+        may: 5, maj: 5,
+        jun: 6, june: 6, juni: 6,
+        jul: 7, july: 7, juli: 7,
+        aug: 8, august: 8,
+        sep: 9, sept: 9, september: 9,
+        oct: 10, october: 10, okt: 10, oktober: 10,
+        nov: 11, november: 11,
+        dec: 12, december: 12,
+    };
+    const namedMatch = normalize(trimmed).match(/^(\d{1,2}) ([a-z]+) (\d{4})$/);
+    if (namedMatch) {
+        const month = monthNames[namedMatch[2]];
+        const date = month ? exactDate(Number(namedMatch[3]), month, Number(namedMatch[1])) : null;
+        return date ? toIsoDate(date) : null;
+    }
+    return null;
 }
 
 function deadlineValue(cell: ExcelJS.Cell | undefined): { iso: string | null; raw: string } {
