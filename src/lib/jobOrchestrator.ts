@@ -1,31 +1,8 @@
 import { createHash } from "node:crypto";
 import ExcelJS from "exceljs";
-import brainData from "./data/brain.json";
+import { mediaSpecs, type MediaSpec } from "./briefd/brain";
 
-export interface MediaSpec {
-    id: string;
-    name: string;
-    publisher: string;
-    category: string;
-    category_tag: string;
-    dimensions: {
-        width_mm?: number;
-        height_mm?: number;
-        width_px?: number;
-        height_px?: number;
-    };
-    bleed_mm: number;
-    safe_zones: {
-        text_mm: number;
-        image_mm: number;
-    };
-    color: {
-        icc_profile: string;
-        pdf_preset: string;
-        transparency_flattener: string;
-    };
-    naming_convention: string;
-}
+export type { MediaSpec } from "./briefd/brain";
 
 export type MediaPlanField = "campaign" | "publisher" | "format" | "deadline" | "notes";
 export type MediaPlanColumnMapping = Partial<Record<MediaPlanField, number>>;
@@ -77,13 +54,13 @@ export interface OrchestratedJob {
     deadline: string | null;
     deadlineRaw: string;
     specs: MediaSpec | null;
+    matchConfidence: "canonical" | "alias" | null;
     generatedFileName: string;
     status: "pending" | "error" | "complete";
     error?: string;
     outputUrl?: string;
 }
 
-const mediaSpecs: MediaSpec[] = brainData.media_specs;
 const HEADER_SCAN_LIMIT = 30;
 
 const HEADER_ALIASES: Record<MediaPlanField, string[]> = {
@@ -327,15 +304,20 @@ export async function parseExcelBuffer(
     };
 }
 
-function findSpec(row: MediaPlanRow): MediaSpec | undefined {
+function normalizedOptions(primary: string, aliases: string[]): Set<string> {
+    return new Set([primary, ...aliases].map(normalize));
+}
+
+function findSpec(row: MediaPlanRow): { spec: MediaSpec; confidence: "canonical" | "alias" } | null {
     const publisher = normalize(row.publisher);
     const format = normalize(row.format);
-    const forPublisher = mediaSpecs.filter((spec) => normalize(spec.publisher) === publisher);
-
-    return (
-        forPublisher.find((spec) => normalize(spec.name) === format) ??
-        forPublisher.find((spec) => format.length >= 4 && normalize(spec.name).includes(format))
+    const forPublisher = mediaSpecs.filter((spec) =>
+        normalizedOptions(spec.publisher, spec.publisher_aliases).has(publisher),
     );
+    const canonical = forPublisher.find((spec) => normalize(spec.name) === format);
+    if (canonical) return { spec: canonical, confidence: "canonical" };
+    const alias = forPublisher.find((spec) => normalizedOptions(spec.name, spec.aliases).has(format));
+    return alias ? { spec: alias, confidence: "alias" } : null;
 }
 
 function safeFileToken(value: string): string {
@@ -373,6 +355,7 @@ export function matchToBrain(row: MediaPlanRow): OrchestratedJob {
             deadline: row.deadline,
             deadlineRaw: row.deadlineRaw,
             specs: null,
+            matchConfidence: null,
             generatedFileName: "",
             status: "error",
             error: `Missing ${missing} on row ${row.source.rowNumber}.`,
@@ -389,6 +372,7 @@ export function matchToBrain(row: MediaPlanRow): OrchestratedJob {
             deadline: row.deadline,
             deadlineRaw: row.deadlineRaw,
             specs: null,
+            matchConfidence: null,
             generatedFileName: "",
             status: "error",
             error: `No matching spec found in The Brain for: ${row.publisher} - ${row.format}`,
@@ -396,10 +380,10 @@ export function matchToBrain(row: MediaPlanRow): OrchestratedJob {
     }
 
     const dateStr = new Date().toISOString().split("T")[0];
-    const fileName = fillNamingConvention(match.naming_convention, {
+    const fileName = fillNamingConvention(match.spec.naming_convention, {
         Campaign: row.campaign || "Campaign",
         Publisher: row.publisher,
-        Format: match.name,
+        Format: match.spec.name,
         Date: dateStr,
     });
 
@@ -408,10 +392,11 @@ export function matchToBrain(row: MediaPlanRow): OrchestratedJob {
         source: row.source,
         campaign: row.campaign,
         publisher: row.publisher,
-        formatName: match.name,
+        formatName: match.spec.name,
         deadline: row.deadline,
         deadlineRaw: row.deadlineRaw,
-        specs: match,
+        specs: match.spec,
+        matchConfidence: match.confidence,
         generatedFileName: fileName,
         status: "pending",
     };

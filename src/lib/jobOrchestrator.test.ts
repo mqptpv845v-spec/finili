@@ -29,8 +29,8 @@ function mediaPlanRow(overrides: Partial<MediaPlanRow> = {}): MediaPlanRow {
         id: "row-2-test",
         source: { sheetName: "Mediaplan", rowNumber: 2 },
         campaign: "Black Friday",
-        publisher: "SvD",
-        format: "Helsida (Stående)",
+        publisher: "Dagens Nyheter",
+        format: "News Spread — Full Height",
         deadline: "2026-09-24",
         deadlineRaw: "24 Sep 2026",
         notes: "",
@@ -43,7 +43,7 @@ describe("parseExcelBuffer", () => {
     it("reads English column names and preserves source identity", async () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format", "Notes"],
-            [["Black Friday", "SvD", "Helsida (Stående)", "rush"]],
+            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height", "rush"]],
         );
         const plan = await parseExcelBuffer(buffer);
 
@@ -53,8 +53,8 @@ describe("parseExcelBuffer", () => {
         expect(plan.rows[0]).toMatchObject({
             source: { sheetName: "Mediaplan", rowNumber: 2 },
             campaign: "Black Friday",
-            publisher: "SvD",
-            format: "Helsida (Stående)",
+            publisher: "Dagens Nyheter",
+            format: "News Spread — Full Height",
             notes: "rush",
         });
         expect(plan.rows[0].id).toMatch(/^row-2-[a-f0-9]{12}$/);
@@ -85,7 +85,7 @@ describe("parseExcelBuffer", () => {
     it("normalizes genuine Excel dates without leaking timezone display text", async () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format", "Deadline"],
-            [["Black Friday", "SvD", "Helsida (Stående)", new Date(2026, 8, 24)]],
+            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height", new Date(2026, 8, 24)]],
         );
         const plan = await parseExcelBuffer(buffer);
         expect(plan.rows[0].deadline).toBe("2026-09-24");
@@ -95,7 +95,7 @@ describe("parseExcelBuffer", () => {
     it("accepts an explicit column mapping and keeps incomplete rows for correction", async () => {
         const buffer = await buildWorkbook(
             ["Kunddata", "Leverans", "Storlek"],
-            [["Vårkampanj", "SvD", "Helsida (Stående)"], ["Höstkampanj", "", "Halvsida"]],
+            [["Vårkampanj", "Dagens Nyheter", "News Spread — Full Height"], ["Höstkampanj", "", "Halvsida"]],
         );
         const plan = await parseExcelBuffer(buffer, {
             headerRow: 1,
@@ -109,7 +109,7 @@ describe("parseExcelBuffer", () => {
     it("keeps stable ids across equivalent parses", async () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format"],
-            [["Black Friday", "SvD", "Helsida (Stående)"]],
+            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height"]],
         );
         const first = await parseExcelBuffer(buffer);
         const second = await parseExcelBuffer(buffer);
@@ -119,7 +119,7 @@ describe("parseExcelBuffer", () => {
     it("skips empty rows and rejects workbooks without recognizable headers", async () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format"],
-            [["Black Friday", "SvD", "Helsida (Stående)"], ["", "", ""]],
+            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height"], ["", "", ""]],
         );
         expect((await parseExcelBuffer(buffer)).rows).toHaveLength(1);
 
@@ -134,18 +134,20 @@ describe("matchToBrain", () => {
     it("matches an exact publisher and format", () => {
         const job = matchToBrain(mediaPlanRow());
         expect(job.status).toBe("pending");
-        expect(job.specs?.id).toBe("svd-helsida");
+        expect(job.specs?.id).toBe("dn-news-spread-full-height");
         expect(job.id).toBe("row-2-test");
+        expect(job.matchConfidence).toBe("canonical");
     });
 
-    it("matches a partial format name", () => {
-        const job = matchToBrain(mediaPlanRow({ publisher: "DN", format: "halvsida" }));
+    it("matches curated publisher and format aliases", () => {
+        const job = matchToBrain(mediaPlanRow({ publisher: "DN", format: "522x178" }));
         expect(job.status).toBe("pending");
-        expect(job.specs?.id).toBe("dn-halvsida");
+        expect(job.specs?.id).toBe("dn-news-spread-half-height");
+        expect(job.matchConfidence).toBe("alias");
     });
 
     it("does not match a one-character format against everything", () => {
-        const job = matchToBrain(mediaPlanRow({ format: "a" }));
+        const job = matchToBrain(mediaPlanRow({ format: "news" }));
         expect(job.status).toBe("error");
         expect(job.specs).toBeNull();
     });

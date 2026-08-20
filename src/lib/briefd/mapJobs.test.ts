@@ -7,8 +7,8 @@ function mediaPlanRow(overrides: Partial<MediaPlanRow> = {}): MediaPlanRow {
         id: "row-2-test",
         source: { sheetName: "Mediaplan", rowNumber: 2 },
         campaign: "Black Friday",
-        publisher: "SvD",
-        format: "Helsida (Stående)",
+        publisher: "Dagens Nyheter",
+        format: "News Spread — Full Height",
         deadline: "2026-09-24",
         deadlineRaw: "2026-09-24",
         notes: "",
@@ -27,19 +27,18 @@ describe("mapJobsToFormats", () => {
         const card = formats[0];
         expect(card.sectionCategory).toBe("Newsprint & Magazines (Print)");
         expect(card.categoryTag).toBe("Print");
-        expect(card.dimensions).toBe("248 × 360 mm");
+        expect(card.dimensions).toBe("522 × 372 mm");
         expect(card.deadline).toBe("24 Sep");
-        expect(card.safeZone).toContain("Text 10 mm");
-        expect(card.safeZone).toContain("Bleed 3 mm");
-        expect(card.fileType).toBe("PDF/X-1a:2001");
-        expect(card.specsUrl).toBe("");
+        expect(card.safeZone).toBe("None");
+        expect(card.fileType).toBe("PDF");
+        expect(card.specsUrl).toContain("dn.ocast.com");
     });
 
     it("uses pixel dimensions and simplified ratios for digital specs", () => {
         const job = matchToBrain(mediaPlanRow({
             campaign: "BF",
-            publisher: "Clear Channel",
-            format: "Play Digital",
+            publisher: "Bauer Media Outdoor",
+            format: "Digital Adshel",
             deadline: null,
             deadlineRaw: "",
         }));

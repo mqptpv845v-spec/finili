@@ -83,9 +83,13 @@ export function mapJobsToFormats(jobs: OrchestratedJob[]): MappedPlan {
         const unit = isPx ? "px" : "mm";
 
         const safeParts: string[] = [];
-        if (spec.safe_zones.text_mm > 0) safeParts.push(`Text ${spec.safe_zones.text_mm} mm`);
-        if (spec.safe_zones.image_mm > 0) safeParts.push(`Image ${spec.safe_zones.image_mm} mm`);
-        if (spec.bleed_mm > 0) safeParts.push(`Bleed ${spec.bleed_mm} mm`);
+        if ((spec.safe_zones?.text_mm ?? 0) > 0) safeParts.push(`Text ${spec.safe_zones?.text_mm} mm`);
+        if ((spec.safe_zones?.image_mm ?? 0) > 0) safeParts.push(`Image ${spec.safe_zones?.image_mm} mm`);
+        if ((spec.bleed_mm ?? 0) > 0) safeParts.push(`Bleed ${spec.bleed_mm} mm`);
+
+        const source = spec.sources[0];
+        const fileTypes = spec.delivery?.file_types.join(", ") ?? "Requirements in official spec";
+        const profile = spec.color?.icc_profile ?? spec.color?.color_space;
 
         formats.push({
             id: job.id || `${spec.id}-${index + 1}`,
@@ -101,12 +105,10 @@ export function mapJobsToFormats(jobs: OrchestratedJob[]): MappedPlan {
             ratioLabel: ratioLabel(width, height),
             deadline: formatDeadline(job.deadline),
             safeZone: safeParts.length > 0 ? safeParts.join(" · ") : "None",
-            fileType: spec.color.pdf_preset,
-            // The Brain does not carry publisher spec URLs yet; the card
-            // hides the link when specsUrl is empty.
-            specsLabel: "",
-            specsUrl: "",
-            metadata: `${spec.color.icc_profile} · ${job.generatedFileName}`,
+            fileType: fileTypes,
+            specsLabel: "Verified source",
+            specsUrl: source.url,
+            metadata: [profile, job.generatedFileName].filter(Boolean).join(" · "),
         });
     });
 

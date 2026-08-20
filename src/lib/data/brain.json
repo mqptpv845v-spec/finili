@@ -1,136 +1,266 @@
 {
-    "media_specs": [
+  "version": 1,
+  "media_specs": [
+    {
+      "id": "linkedin-single-image-landscape",
+      "name": "Single Image — Landscape",
+      "aliases": ["single image landscape", "landscape", "1200x628", "1200 × 628"],
+      "publisher": "LinkedIn",
+      "publisher_aliases": ["LinkedIn Ads", "LinkedIn Campaign Manager"],
+      "category": "Social Media (SoMe)",
+      "category_tag": "SoMe",
+      "dimensions": { "width_px": 1200, "height_px": 628 },
+      "delivery": { "file_types": ["JPG", "PNG", "GIF"], "max_file_size_kb": 5120 },
+      "naming_convention": "{{Campaign}}_LinkedIn_Landscape_1200x628.asset",
+      "sources": [
         {
-            "id": "svd-helsida",
-            "name": "Helsida (Stående)",
-            "publisher": "SvD",
-            "category": "Newsprint & Magazines (Print)",
-            "category_tag": "Print",
-            "dimensions": {
-                "width_mm": 248,
-                "height_mm": 360
-            },
-            "bleed_mm": 3,
-            "safe_zones": {
-                "text_mm": 10,
-                "image_mm": 5
-            },
-            "color": {
-                "icc_profile": "WAN-IFRAnewspaper26v5.icc",
-                "pdf_preset": "PDF/X-1a:2001",
-                "transparency_flattener": "High Resolution"
-            },
-            "naming_convention": "{{Campaign}}_{{Publisher}}_Helsida_{{Date}}.pdf"
-        },
-        {
-            "id": "dn-halvsida",
-            "name": "Halvsida (Liggande)",
-            "publisher": "DN",
-            "category": "Newsprint & Magazines (Print)",
-            "category_tag": "Print",
-            "dimensions": {
-                "width_mm": 252,
-                "height_mm": 180
-            },
-            "bleed_mm": 0,
-            "safe_zones": {
-                "text_mm": 5,
-                "image_mm": 5
-            },
-            "color": {
-                "icc_profile": "PSO_LWC_Improved_eci.icc",
-                "pdf_preset": "PDF/X-4",
-                "transparency_flattener": "None"
-            },
-            "naming_convention": "{{Campaign}}_{{Publisher}}_Halvsida_{{Date}}.pdf"
-        },
-        {
-            "id": "jcdecaux-eurosize",
-            "name": "Eurosize",
-            "publisher": "JCDecaux",
-            "category": "Out of Home (OOH & DOOH)",
-            "category_tag": "OOH",
-            "dimensions": {
-                "width_mm": 1185,
-                "height_mm": 1750
-            },
-            "bleed_mm": 5,
-            "safe_zones": {
-                "text_mm": 50,
-                "image_mm": 10
-            },
-            "color": {
-                "icc_profile": "CoatedFOGRA39.icc",
-                "pdf_preset": "PDF/X-4",
-                "transparency_flattener": "None"
-            },
-            "naming_convention": "{{Campaign}}_OOH_{{Publisher}}_Eurosize.pdf"
-        },
-        {
-            "id": "di-weekend",
-            "name": "Di Weekend Magasin",
-            "publisher": "Dagens Industri",
-            "category": "Newsprint & Magazines (Print)",
-            "category_tag": "Print",
-            "dimensions": {
-                "width_mm": 235,
-                "height_mm": 312
-            },
-            "bleed_mm": 3,
-            "safe_zones": {
-                "text_mm": 15,
-                "image_mm": 5
-            },
-            "color": {
-                "icc_profile": "CoatedFOGRA39.icc",
-                "pdf_preset": "PDF/X-4",
-                "transparency_flattener": "None"
-            },
-            "naming_convention": "{{Campaign}}_{{Publisher}}_{{Format}}_{{Date}}.pdf"
-        },
-        {
-            "id": "clear-channel-play",
-            "name": "Play Digital",
-            "publisher": "Clear Channel",
-            "category": "Out of Home (OOH & DOOH)",
-            "category_tag": "DOOH",
-            "dimensions": {
-                "width_px": 1080,
-                "height_px": 1920
-            },
-            "bleed_mm": 0,
-            "safe_zones": {
-                "text_mm": 0,
-                "image_mm": 0
-            },
-            "color": {
-                "icc_profile": "sRGB",
-                "pdf_preset": "High Quality Print",
-                "transparency_flattener": "None"
-            },
-            "naming_convention": "{{Campaign}}_{{Publisher}}_{{Format}}_{{Date}}_RGB.pdf"
-        },
-        {
-            "id": "rulltrappstavla",
-            "name": "Rulltrappstavla",
-            "publisher": "Wall Street Media",
-            "category": "Out of Home (OOH & DOOH)",
-            "category_tag": "OOH",
-            "dimensions": {
-                "width_mm": 464,
-                "height_mm": 912
-            },
-            "bleed_mm": 5,
-            "safe_zones": {
-                "text_mm": 20,
-                "image_mm": 10
-            },
-            "color": {
-                "icc_profile": "CoatedFOGRA39.icc",
-                "pdf_preset": "PDF/X-4",
-                "transparency_flattener": "None"
-            },
-            "naming_convention": "{{Campaign}}_{{Publisher}}_{{Format}}_{{Date}}.pdf"
+          "title": "LinkedIn single image ads advertising specifications",
+          "url": "https://www.linkedin.com/help/linkedin/answer/a426534/single-image-ads-advertising-specifications?lang=en-us",
+          "verified_at": "2026-08-20",
+          "authority": "platform"
         }
-    ]
+      ]
+    },
+    {
+      "id": "linkedin-single-image-square",
+      "name": "Single Image — Square",
+      "aliases": ["single image square", "square", "1200x1200", "1200 × 1200", "1:1"],
+      "publisher": "LinkedIn",
+      "publisher_aliases": ["LinkedIn Ads", "LinkedIn Campaign Manager"],
+      "category": "Social Media (SoMe)",
+      "category_tag": "SoMe",
+      "dimensions": { "width_px": 1200, "height_px": 1200 },
+      "delivery": { "file_types": ["JPG", "PNG", "GIF"], "max_file_size_kb": 5120 },
+      "naming_convention": "{{Campaign}}_LinkedIn_Square_1200x1200.asset",
+      "sources": [
+        {
+          "title": "LinkedIn single image ads advertising specifications",
+          "url": "https://www.linkedin.com/help/linkedin/answer/a426534/single-image-ads-advertising-specifications?lang=en-us",
+          "verified_at": "2026-08-20",
+          "authority": "platform"
+        }
+      ]
+    },
+    {
+      "id": "linkedin-single-image-vertical",
+      "name": "Single Image — Vertical",
+      "aliases": ["single image vertical", "vertical", "720x900", "720 × 900", "4:5"],
+      "publisher": "LinkedIn",
+      "publisher_aliases": ["LinkedIn Ads", "LinkedIn Campaign Manager"],
+      "category": "Social Media (SoMe)",
+      "category_tag": "SoMe",
+      "dimensions": { "width_px": 720, "height_px": 900 },
+      "delivery": { "file_types": ["JPG", "PNG", "GIF"], "max_file_size_kb": 5120 },
+      "naming_convention": "{{Campaign}}_LinkedIn_Vertical_720x900.asset",
+      "sources": [
+        {
+          "title": "LinkedIn single image ads advertising specifications",
+          "url": "https://www.linkedin.com/help/linkedin/answer/a426534/single-image-ads-advertising-specifications?lang=en-us",
+          "verified_at": "2026-08-20",
+          "authority": "platform"
+        }
+      ]
+    },
+    {
+      "id": "google-display-inline-rectangle",
+      "name": "Inline Rectangle",
+      "aliases": ["medium rectangle", "inline rectangle", "300x250", "300 × 250"],
+      "publisher": "Google Display",
+      "publisher_aliases": ["Google Ads", "Google Display Network", "GDN"],
+      "category": "Digital Display & High-Impact",
+      "category_tag": "Display",
+      "dimensions": { "width_px": 300, "height_px": 250 },
+      "delivery": { "file_types": ["GIF", "JPG", "PNG"], "max_file_size_kb": 150 },
+      "naming_convention": "{{Campaign}}_Google_Display_300x250.asset",
+      "sources": [
+        {
+          "title": "Google Ads uploaded display ads specifications",
+          "url": "https://support.google.com/google-ads/answer/1722096?hl=en",
+          "verified_at": "2026-08-20",
+          "authority": "platform"
+        }
+      ]
+    },
+    {
+      "id": "google-display-panorama-se",
+      "name": "Panorama — Sweden",
+      "aliases": ["panorama", "panorama sweden", "980x120", "980 × 120"],
+      "publisher": "Google Display",
+      "publisher_aliases": ["Google Ads", "Google Display Network", "GDN"],
+      "category": "Digital Display & High-Impact",
+      "category_tag": "Display",
+      "dimensions": { "width_px": 980, "height_px": 120 },
+      "delivery": { "file_types": ["GIF", "JPG", "PNG"], "max_file_size_kb": 150 },
+      "naming_convention": "{{Campaign}}_Google_Display_980x120.asset",
+      "sources": [
+        {
+          "title": "Google Ads uploaded display ads specifications",
+          "url": "https://support.google.com/google-ads/answer/1722096?hl=en",
+          "verified_at": "2026-08-20",
+          "authority": "platform",
+          "note": "Google lists 980 × 120 as regionally available in Sweden."
+        }
+      ]
+    },
+    {
+      "id": "google-display-large-mobile-banner",
+      "name": "Large Mobile Banner",
+      "aliases": ["large mobile banner", "mobile banner large", "320x100", "320 × 100"],
+      "publisher": "Google Display",
+      "publisher_aliases": ["Google Ads", "Google Display Network", "GDN"],
+      "category": "Digital Display & High-Impact",
+      "category_tag": "Display",
+      "dimensions": { "width_px": 320, "height_px": 100 },
+      "delivery": { "file_types": ["GIF", "JPG", "PNG"], "max_file_size_kb": 150 },
+      "naming_convention": "{{Campaign}}_Google_Display_320x100.asset",
+      "sources": [
+        {
+          "title": "Google Ads uploaded display ads specifications",
+          "url": "https://support.google.com/google-ads/answer/1722096?hl=en",
+          "verified_at": "2026-08-20",
+          "authority": "platform"
+        }
+      ]
+    },
+    {
+      "id": "jcdecaux-eurosize-inclusive-print",
+      "name": "Eurosize Inclusive Print",
+      "aliases": ["eurosize", "eurosize inclusive print", "1185x1750", "1185 × 1750"],
+      "publisher": "JCDecaux",
+      "publisher_aliases": ["JC Decaux", "JCDecaux Sweden"],
+      "category": "Out of Home (OOH & DOOH)",
+      "category_tag": "OOH",
+      "dimensions": {
+        "width_mm": 1185,
+        "height_mm": 1750,
+        "visible_width_mm": 1155,
+        "visible_height_mm": 1710
+      },
+      "bleed_mm": 5,
+      "delivery": { "file_types": ["PDF 1.6"], "resolution_dpi": 60 },
+      "naming_convention": "{{Campaign}}_JCDecaux_Eurosize_{{Date}}.pdf",
+      "sources": [
+        {
+          "title": "JCDecaux Eurosize inclusive print material specification",
+          "url": "https://jcdecaux.se/wp-content/uploads/2025/08/Eurosize-ink-tryck-Materialspecifikation-Staende-2025-4.pdf",
+          "verified_at": "2026-08-20",
+          "authority": "publisher"
+        }
+      ]
+    },
+    {
+      "id": "jcdecaux-digisize-portrait",
+      "name": "Digisize — Portrait",
+      "aliases": ["digisize", "digisize portrait", "1080x1920", "1080 × 1920"],
+      "publisher": "JCDecaux",
+      "publisher_aliases": ["JC Decaux", "JCDecaux Sweden"],
+      "category": "Out of Home (OOH & DOOH)",
+      "category_tag": "DOOH",
+      "dimensions": { "width_px": 1080, "height_px": 1920 },
+      "delivery": { "file_types": ["MP4", "JPG", "PNG"], "max_file_size_kb": 30720, "duration_seconds": [5, 10] },
+      "naming_convention": "{{Campaign}}_JCDecaux_Digisize_1080x1920.asset",
+      "sources": [
+        {
+          "title": "JCDecaux Digisize material specification",
+          "url": "https://jcdecaux.se/wp-content/uploads/2025/08/Digisize-Materialspecifikation-Staende-2025-1.pdf",
+          "verified_at": "2026-08-20",
+          "authority": "publisher"
+        }
+      ]
+    },
+    {
+      "id": "bauer-digital-adshel",
+      "name": "Digital Adshel",
+      "aliases": ["digital adshel", "adshel digital", "1080x1920", "1080 × 1920"],
+      "publisher": "Bauer Media Outdoor",
+      "publisher_aliases": ["Bauer Outdoor", "BMO", "Clear Channel", "Clear Channel Outdoor"],
+      "category": "Out of Home (OOH & DOOH)",
+      "category_tag": "DOOH",
+      "dimensions": { "width_px": 1080, "height_px": 1920 },
+      "delivery": { "file_types": ["MP4", "MOV", "PNG", "JPG"], "duration_seconds": [5], "deadline_business_days": 3 },
+      "naming_convention": "{{Campaign}}_Bauer_Digital_Adshel_1080x1920.asset",
+      "sources": [
+        {
+          "title": "Bauer Media Outdoor Digital Adshel specification",
+          "url": "https://www.bauermediaoutdoor.se/specifikationer/digital-adshel",
+          "verified_at": "2026-08-20",
+          "authority": "publisher"
+        }
+      ]
+    },
+    {
+      "id": "bauer-digital-billboard-hd",
+      "name": "Digital Billboard — HD",
+      "aliases": ["digital billboard", "digital billboard hd", "1920x1080", "1920 × 1080"],
+      "publisher": "Bauer Media Outdoor",
+      "publisher_aliases": ["Bauer Outdoor", "BMO", "Clear Channel", "Clear Channel Outdoor"],
+      "category": "Out of Home (OOH & DOOH)",
+      "category_tag": "DOOH",
+      "dimensions": { "width_px": 1920, "height_px": 1080 },
+      "delivery": { "file_types": ["MP4", "MOV", "PNG", "JPG"], "duration_seconds": [5], "deadline_business_days": 3 },
+      "naming_convention": "{{Campaign}}_Bauer_Digital_Billboard_1920x1080.asset",
+      "sources": [
+        {
+          "title": "Bauer Media Outdoor Digital Billboard specification",
+          "url": "https://www.bauermediaoutdoor.se/en/specifications/digital-billboard",
+          "verified_at": "2026-08-20",
+          "authority": "publisher"
+        }
+      ]
+    },
+    {
+      "id": "dn-news-spread-full-height",
+      "name": "News Spread — Full Height",
+      "aliases": ["news spread full height", "uppslag helsida", "522x372", "522 × 372"],
+      "publisher": "Dagens Nyheter",
+      "publisher_aliases": ["DN", "DN Print"],
+      "category": "Newsprint & Magazines (Print)",
+      "category_tag": "Print",
+      "dimensions": { "width_mm": 522, "height_mm": 372 },
+      "color": { "icc_profile": "WAN-IFRAnewspaper26v5.icc", "color_space": "CMYK", "max_ink_percent": 230 },
+      "delivery": { "file_types": ["PDF"], "max_file_size_kb": 10240, "resolution_dpi": 200 },
+      "naming_convention": "{{Campaign}}_DN_News_Spread_522x372_{{Date}}.pdf",
+      "sources": [
+        {
+          "title": "Dagens Nyheter News print formats",
+          "url": "https://dn.ocast.com/sv/products/3336/nyheter",
+          "verified_at": "2026-08-20",
+          "authority": "publisher-profile"
+        },
+        {
+          "title": "Dagens Nyheter daily press material specification",
+          "url": "https://dn.ocast.com/specifications/-284",
+          "verified_at": "2026-08-20",
+          "authority": "publisher-profile"
+        }
+      ]
+    },
+    {
+      "id": "dn-news-spread-half-height",
+      "name": "News Spread — Half Height",
+      "aliases": ["news spread half height", "uppslag halvsida", "522x178", "522 × 178"],
+      "publisher": "Dagens Nyheter",
+      "publisher_aliases": ["DN", "DN Print"],
+      "category": "Newsprint & Magazines (Print)",
+      "category_tag": "Print",
+      "dimensions": { "width_mm": 522, "height_mm": 178 },
+      "color": { "icc_profile": "WAN-IFRAnewspaper26v5.icc", "color_space": "CMYK", "max_ink_percent": 230 },
+      "delivery": { "file_types": ["PDF"], "max_file_size_kb": 10240, "resolution_dpi": 200 },
+      "naming_convention": "{{Campaign}}_DN_News_Spread_522x178_{{Date}}.pdf",
+      "sources": [
+        {
+          "title": "Dagens Nyheter News print formats",
+          "url": "https://dn.ocast.com/sv/products/3336/nyheter",
+          "verified_at": "2026-08-20",
+          "authority": "publisher-profile"
+        },
+        {
+          "title": "Dagens Nyheter daily press material specification",
+          "url": "https://dn.ocast.com/specifications/-284",
+          "verified_at": "2026-08-20",
+          "authority": "publisher-profile"
+        }
+      ]
+    }
+  ]
 }
