@@ -205,6 +205,24 @@ describe("parseExcelBuffer", () => {
         expect(plan.rows[1]).toMatchObject({ campaign: "Höstkampanj", publisher: "", format: "Halvsida" });
     });
 
+    it("treats an explicit mapping as authoritative when an optional column is unmapped", async () => {
+        const buffer = await buildWorkbook(
+            ["Campaign", "Publisher", "Format", "Deadline"],
+            [["Launch", "LinkedIn", "Single Image — Square", "not a delivery date"]],
+        );
+        const detected = await parseExcelBuffer(buffer);
+        expect(detected.mapping.deadline).toBe(4);
+        expect(detected.rows[0].deadlineRaw).toBe("not a delivery date");
+
+        const corrected = await parseExcelBuffer(buffer, {
+            headerRow: 1,
+            mapping: { campaign: 1, publisher: 2, format: 3 },
+        });
+        expect(corrected.mapping.deadline).toBeUndefined();
+        expect(corrected.rows[0]).toMatchObject({ deadline: null, deadlineRaw: "" });
+        expect(corrected.warnings).toContain("Deadline column was not detected.");
+    });
+
     it("keeps stable ids across equivalent parses", async () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format"],

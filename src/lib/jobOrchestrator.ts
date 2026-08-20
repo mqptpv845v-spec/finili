@@ -304,7 +304,7 @@ export async function parseExcelBuffer(
     validateHeaderRow(worksheet, headerRow);
 
     const detectedMapping = mappingForRow(worksheet.getRow(headerRow));
-    const mapping = { ...detectedMapping, ...options.mapping };
+    const mapping = options.mapping ? { ...options.mapping } : detectedMapping;
     const columns = columnsForRow(worksheet.getRow(headerRow));
     const warnings: string[] = [];
 
