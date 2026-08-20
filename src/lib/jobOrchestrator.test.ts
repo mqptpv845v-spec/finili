@@ -68,7 +68,7 @@ describe("parseExcelBuffer", () => {
             plan.addRow(["Kund: Exempel AB"]);
             plan.addRow([]);
             plan.addRow(["kampanj", "MEDIEHUS", "typ", "materialdatum"]);
-            plan.addRow(["Vårkampanj", "JCDecaux", "Eurosize", new Date(2026, 8, 24)]);
+            plan.addRow(["Vårkampanj", "JCDecaux", "Eurosize", new Date(Date.UTC(2026, 8, 24))]);
         });
 
         const plan = await parseExcelBuffer(buffer);
@@ -85,11 +85,20 @@ describe("parseExcelBuffer", () => {
     it("normalizes genuine Excel dates without leaking timezone display text", async () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format", "Deadline"],
-            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height", new Date(2026, 8, 24)]],
+            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height", new Date(Date.UTC(2026, 8, 24))]],
         );
         const plan = await parseExcelBuffer(buffer);
         expect(plan.rows[0].deadline).toBe("2026-09-24");
         expect(plan.rows[0].deadlineRaw).not.toContain("GMT");
+    });
+
+    it("treats Excel date objects as UTC date-only values", async () => {
+        const buffer = await buildWorkbook(
+            ["Campaign", "Publisher", "Format", "Deadline"],
+            [["Black Friday", "Dagens Nyheter", "News Spread — Full Height", new Date("2026-09-24T00:00:00.000Z")]],
+        );
+        const plan = await parseExcelBuffer(buffer);
+        expect(plan.rows[0].deadline).toBe("2026-09-24");
     });
 
     it("keeps impossible calendar dates unresolved instead of normalizing them", async () => {
