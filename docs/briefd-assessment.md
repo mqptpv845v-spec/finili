@@ -1,6 +1,8 @@
 # Briefd — product assessment and execution plan
 
-*Evidence-backed discovery, 2026-08-20. Read-only audit of HEAD `3e81757`. Code facts and observed runtime behavior are cited throughout; product inferences and recommendations are labelled as such. This document is an assessment and a proposal — it is not a specification, and nothing here has been implemented.*
+> **Implementation status, 2026-08-20:** the historical audit facts below describe `3e81757`. Phases 1–5 are now materially implemented; Phase 6 runtime persistence and sharing are not complete. Validation still uses synthetic plans, so neither real-plan coverage nor external sharing is claimed.
+
+*Evidence-backed discovery, 2026-08-20. Code facts and observed runtime behavior from the original read-only audit are cited throughout; product inferences and recommendations are labelled as such. This document remains the execution contract, with the status above taking precedence over historical present-tense findings.*
 
 **Backend constraint agreed with the product owner:** all backend work (database, persistence, share links) targets **local development via `specific dev` only** for now. No `specific deploy` step is in scope. The implementation should avoid unnecessary coupling to the local environment, but deployment readiness is not claimed or verified in this release.
 
@@ -153,7 +155,7 @@ Single-user editing (no authentication, no concurrent editing). Shared access is
 - Every source row is traceable through import. Import-level column mapping is separate from row-level correction.
 - Every row either matches a Brain spec or appears in a fix-it list. A listed row can be assigned to a verified spec or completed with visibly labelled campaign-local, user-provided values.
 - Every Brain-verified card carries a working publisher specification link and verification metadata. User-provided cards never imply publisher verification.
-- The calendar, the sort order, and the deliverable badges all derive from parsed dates and work for any month.
+- The calendar and sort order derive from parsed dates and work for any month. Arbitrary deliverable-wave badges are removed unless the source input explicitly defines the wave label and date.
 - A view-only share link opens the same campaign in a second browser session connected to the local environment, and reloading preserves the workspace. External sharing remains unclaimed.
 - No user-facing string states a capability that does not exist, and no demo name appears in a real session. Zero dead controls remain.
 - Upload is completable using only the keyboard, and parse errors are human-readable and returned with a 4xx status.
@@ -219,7 +221,7 @@ The ordering below deliberately prioritises one complete vertical workflow over 
 
 **Objective.** Derive the workspace from actual data before adding distribution infrastructure.
 **User-visible outcome.** Any month renders correctly; the CSV is named after the real campaign, respects active filters, and escapes quotes; guide overlays reflect each spec's own safe-zone and bleed values, or are hidden when unknown.
-**Code areas.** `BriefdCalendarView`, `BriefdSpreadsheetView`, `FormatDetailView`, and the badge logic in `FormatCardItem`.
+**Code areas.** `BriefdCalendarView`, `BriefdSpreadsheetView`, `FormatDetailView`, and removal of arbitrary badge logic in `FormatCardItem` unless a source-backed wave field is introduced.
 **Dependencies.** Phases 2 through 4.
 **Acceptance.** An uploaded plan spanning two months renders correctly and consistently in cards, calendar, table, detail, copy, and export views.
 **Verification.** Browser checks with a multi-month uploaded plan, plus focused tests for sorting and CSV serialization.
