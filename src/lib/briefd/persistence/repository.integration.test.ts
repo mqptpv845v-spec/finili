@@ -7,14 +7,15 @@ import type { FormatData } from "@/lib/briefd/types";
 import type { MediaPlanRow } from "@/lib/jobOrchestrator";
 import { hashCapabilitySecret } from "./security";
 import type { CampaignSnapshot } from "./contracts";
-import type { StoredCampaign, StoredShare } from "./service";
+import { CampaignService, campaignUpdateFromSnapshot, type StoredCampaign, type StoredShare } from "./service";
 import { PostgresCampaignRepository } from "./repository";
 
 const databaseUrl = process.env.DATABASE_URL?.trim();
 const databaseDescribe = databaseUrl ? describe : describe.skip;
-const sql = databaseUrl ? postgres(databaseUrl, { max: 1 }) : null;
+const sql = databaseUrl ? postgres(databaseUrl, { max: 4 }) : null;
 const repository = sql ? new PostgresCampaignRepository(sql) : null;
 const createdCampaignIds = new Set<string>();
+const repositoryNow = "2026-08-20T12:00:00.000Z";
 
 function campaignRecord(): StoredCampaign {
   const campaignId = randomUUID();
@@ -116,12 +117,12 @@ databaseDescribe("PostgresCampaignRepository", () => {
         formats: record.snapshot.formats.slice(1),
       },
     };
-    await expect(repository!.replaceCampaign(replacement, 1)).resolves.toBe(true);
+    await expect(repository!.replaceCampaign(replacement, 1, repositoryNow)).resolves.toBe("replaced");
     await expect(repository!.findCampaign(record.snapshot.id)).resolves.toEqual(replacement);
 
     const stale = { ...replacement, snapshot: { ...replacement.snapshot, revision: 3, campaignName: "Stale write" } };
-    await expect(repository!.replaceCampaign(stale, 1)).resolves.toBe(false);
-    await expect(repository!.replaceCampaign({ ...stale, ownerSessionHash: "0".repeat(64) }, 2)).resolves.toBe(false);
+    await expect(repository!.replaceCampaign(stale, 1, repositoryNow)).resolves.toBe("revision-conflict");
+    await expect(repository!.replaceCampaign({ ...stale, ownerSessionHash: "0".repeat(64) }, 2, repositoryNow)).resolves.toBe("revision-conflict");
     await expect(repository!.findCampaign(record.snapshot.id)).resolves.toEqual(replacement);
 
     const invalidReplacement: StoredCampaign = {
@@ -132,7 +133,7 @@ databaseDescribe("PostgresCampaignRepository", () => {
         formats: [{ ...replacement.snapshot.formats[0], id: "missing-source-row" }],
       },
     };
-    await expect(repository!.replaceCampaign(invalidReplacement, 2)).rejects.toThrow("does not belong");
+    await expect(repository!.replaceCampaign(invalidReplacement, 2, repositoryNow)).rejects.toThrow("does not belong");
     await expect(repository!.findCampaign(record.snapshot.id)).resolves.toEqual(replacement);
   });
 
@@ -150,7 +151,7 @@ databaseDescribe("PostgresCampaignRepository", () => {
       revokedAt: null,
     };
 
-    await repository!.createShare(share);
+    await expect(repository!.createShare(share, repositoryNow)).resolves.toBe("created");
     await expect(repository!.findShareByTokenHash(share.tokenHash)).resolves.toEqual(share);
     await expect(repository!.findShareByTokenHash(plainToken)).resolves.toBeNull();
     await expect(repository!.listShares(record.snapshot.id)).resolves.toEqual([share]);
@@ -173,6 +174,78 @@ databaseDescribe("PostgresCampaignRepository", () => {
     await expect(repository!.findShareByTokenHash(share.tokenHash)).resolves.toMatchObject({ revokedAt });
   });
 
+  it("rejects unresolved updates while a share is active and keeps that link readable", async () => {
+    const record = campaignRecord();
+    createdCampaignIds.add(record.snapshot.id);
+    await repository!.createCampaign(record);
+    const service = new CampaignService(repository!, () => new Date(repositoryNow));
+    const ownerSecret = `owner-${record.snapshot.id}`;
+    const share = await service.createShare(record.snapshot.id, ownerSecret);
+    const unresolved = {
+      ...campaignUpdateFromSnapshot(record.snapshot),
+      resolutions: campaignUpdateFromSnapshot(record.snapshot).resolutions.slice(0, 1),
+    };
+
+    await expect(service.updateCampaign(unresolved, ownerSecret)).rejects.toMatchObject({
+      status: 409,
+      message: "Revoke active share links before leaving campaign rows unresolved.",
+    });
+    await expect(service.loadSharedCampaign(share.token)).resolves.toMatchObject({
+      access: "view",
+      campaign: { id: record.snapshot.id, revision: 1 },
+    });
+  });
+
+  it("serializes share creation against an unresolved replacement", async () => {
+    const record = campaignRecord();
+    createdCampaignIds.add(record.snapshot.id);
+    await repository!.createCampaign(record);
+    const unresolved: StoredCampaign = {
+      ...record,
+      snapshot: { ...record.snapshot, revision: 2, formats: record.snapshot.formats.slice(0, 1) },
+    };
+    const share: StoredShare = {
+      id: randomUUID(),
+      campaignId: record.snapshot.id,
+      tokenHash: hashCapabilitySecret(`racing-share-${randomUUID()}`),
+      createdAt: repositoryNow,
+      expiresAt: null,
+      revokedAt: null,
+    };
+
+    const [replaceResult, shareResult] = await Promise.all([
+      repository!.replaceCampaign(unresolved, 1, repositoryNow),
+      repository!.createShare(share, repositoryNow),
+    ]);
+
+    expect([
+      ["replaced", "campaign-unresolved"],
+      ["active-share-conflict", "created"],
+    ]).toContainEqual([replaceResult, shareResult]);
+    const stored = await repository!.findCampaign(record.snapshot.id);
+    const shares = await repository!.listShares(record.snapshot.id);
+    expect(stored).not.toBeNull();
+    expect(stored!.snapshot.formats).toHaveLength(shareResult === "created" ? 2 : 1);
+    expect(shares).toHaveLength(shareResult === "created" ? 1 : 0);
+  });
+
+  it("filters expired and revoked shares from the owner response at the service clock", async () => {
+    const record = campaignRecord();
+    createdCampaignIds.add(record.snapshot.id);
+    await repository!.createCampaign(record);
+    const shares: StoredShare[] = [
+      { id: randomUUID(), campaignId: record.snapshot.id, tokenHash: "1".repeat(64), createdAt: repositoryNow, expiresAt: "2026-08-21T12:00:00.000Z", revokedAt: null },
+      { id: randomUUID(), campaignId: record.snapshot.id, tokenHash: "2".repeat(64), createdAt: "2026-08-19T12:00:00.000Z", expiresAt: "2026-08-20T11:59:59.000Z", revokedAt: null },
+      { id: randomUUID(), campaignId: record.snapshot.id, tokenHash: "3".repeat(64), createdAt: "2026-08-19T12:00:00.000Z", expiresAt: null, revokedAt: "2026-08-20T11:00:00.000Z" },
+    ];
+    for (const share of shares) await expect(repository!.createShare(share, repositoryNow)).resolves.toBe("created");
+    const service = new CampaignService(repository!, () => new Date(repositoryNow));
+
+    await expect(service.loadOwnerCampaign(record.snapshot.id, `owner-${record.snapshot.id}`)).resolves.toMatchObject({
+      shares: [{ id: shares[0].id, expiresAt: shares[0].expiresAt }],
+    });
+  });
+
   it("cascades campaign deletion to rows, resolved formats, and shares", async () => {
     const record = campaignRecord();
     await repository!.createCampaign(record);
@@ -184,7 +257,7 @@ databaseDescribe("PostgresCampaignRepository", () => {
       expiresAt: null,
       revokedAt: null,
     };
-    await repository!.createShare(share);
+    await expect(repository!.createShare(share, repositoryNow)).resolves.toBe("created");
     await repository!.deleteCampaign(record.snapshot.id);
 
     const counts = await sql!<{ campaigns: number; rows: number; formats: number; shares: number }[]>`

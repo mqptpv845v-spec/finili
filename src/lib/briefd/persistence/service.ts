@@ -47,13 +47,16 @@ export interface StoredShare {
   revokedAt: string | null;
 }
 
+export type ReplaceCampaignResult = "replaced" | "revision-conflict" | "active-share-conflict";
+export type CreateShareResult = "created" | "campaign-not-found" | "campaign-unresolved";
+
 export interface CampaignRepository {
   createCampaign(record: StoredCampaign): Promise<void>;
   findCampaign(id: string): Promise<StoredCampaign | null>;
-  replaceCampaign(record: StoredCampaign, expectedRevision: number): Promise<boolean>;
+  replaceCampaign(record: StoredCampaign, expectedRevision: number, now: string): Promise<ReplaceCampaignResult>;
   deleteCampaign(id: string): Promise<void>;
   listShares(campaignId: string): Promise<StoredShare[]>;
-  createShare(share: StoredShare): Promise<void>;
+  createShare(share: StoredShare, now: string): Promise<CreateShareResult>;
   findShareByTokenHash(tokenHash: string): Promise<StoredShare | null>;
   revokeShare(campaignId: string, shareId: string, revokedAt: string): Promise<boolean>;
 }
@@ -136,6 +139,10 @@ function ownerMatches(record: StoredCampaign | null, secret: string): record is 
   return Boolean(record && secret && capabilityMatches(secret, record.ownerSessionHash));
 }
 
+function isActiveShare(share: StoredShare, now: number): boolean {
+  return !share.revokedAt && (!share.expiresAt || Date.parse(share.expiresAt) > now);
+}
+
 export class CampaignService {
   constructor(private readonly repository: CampaignRepository, private readonly now = () => new Date()) {}
 
@@ -150,8 +157,9 @@ export class CampaignService {
   async loadOwnerCampaign(id: string, ownerSecret: string): Promise<OwnerCampaignResponse> {
     const record = await this.repository.findCampaign(id);
     if (!ownerMatches(record, ownerSecret)) throw new PersistenceError("Campaign not found.", 404);
+    const now = this.now().getTime();
     const shares = (await this.repository.listShares(id))
-      .filter((share) => !share.revokedAt)
+      .filter((share) => isActiveShare(share, now))
       .map(({ id: shareId, createdAt, expiresAt }) => ({ id: shareId, createdAt, expiresAt }));
     return { access: "edit", campaign: record.snapshot, shares };
   }
@@ -161,8 +169,15 @@ export class CampaignService {
     if (!ownerMatches(current, ownerSecret)) throw new PersistenceError("Campaign not found.", 404);
     if (input.revision !== current.snapshot.revision) throw new PersistenceError("Campaign changed since it was loaded.", 409);
     const next = materializeSnapshot(input, input.id, input.revision + 1);
-    const updated = await this.repository.replaceCampaign({ snapshot: next, ownerSessionHash: current.ownerSessionHash }, input.revision);
-    if (!updated) throw new PersistenceError("Campaign changed since it was loaded.", 409);
+    const updated = await this.repository.replaceCampaign(
+      { snapshot: next, ownerSessionHash: current.ownerSessionHash },
+      input.revision,
+      this.now().toISOString(),
+    );
+    if (updated === "active-share-conflict") {
+      throw new PersistenceError("Revoke active share links before leaving campaign rows unresolved.", 409);
+    }
+    if (updated === "revision-conflict") throw new PersistenceError("Campaign changed since it was loaded.", 409);
     return this.loadOwnerCampaign(input.id, ownerSecret);
   }
 
@@ -176,15 +191,18 @@ export class CampaignService {
     const current = await this.repository.findCampaign(id);
     if (!ownerMatches(current, ownerSecret)) throw new PersistenceError("Campaign not found.", 404);
     if (unresolvedRowIds(current.snapshot).length > 0) throw new PersistenceError("Resolve every imported row before sharing.", 409);
-    if (expiresAt && (!Number.isFinite(Date.parse(expiresAt)) || Date.parse(expiresAt) <= this.now().getTime())) {
+    const now = this.now();
+    if (expiresAt && (!Number.isFinite(Date.parse(expiresAt)) || Date.parse(expiresAt) <= now.getTime())) {
       throw new PersistenceError("Share expiry must be a future date.", 400);
     }
     const token = createCapabilitySecret();
     const share: StoredShare = {
       id: randomUUID(), campaignId: id, tokenHash: hashCapabilitySecret(token),
-      createdAt: this.now().toISOString(), expiresAt, revokedAt: null,
+      createdAt: now.toISOString(), expiresAt, revokedAt: null,
     };
-    await this.repository.createShare(share);
+    const created = await this.repository.createShare(share, now.toISOString());
+    if (created === "campaign-unresolved") throw new PersistenceError("Resolve every imported row before sharing.", 409);
+    if (created === "campaign-not-found") throw new PersistenceError("Campaign not found.", 404);
     return { id: share.id, token };
   }
 

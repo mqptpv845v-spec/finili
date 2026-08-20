@@ -10,7 +10,7 @@ import type {
   SectionCategory,
   SpecTrust,
 } from "@/lib/briefd/types";
-import { assertCampaignSnapshot, type CampaignSnapshot } from "./contracts";
+import { assertCampaignSnapshot, unresolvedRowIds, type CampaignSnapshot } from "./contracts";
 import {
   CampaignService,
   type CampaignRepository,
@@ -273,9 +273,31 @@ export class PostgresCampaignRepository implements CampaignRepository {
     return this.sql.begin("isolation level repeatable read read only", (sql) => readCampaign(sql, id));
   }
 
-  async replaceCampaign(record: StoredCampaign, expectedRevision: number): Promise<boolean> {
+  async replaceCampaign(record: StoredCampaign, expectedRevision: number, now: string) {
     return this.sql.begin(async (sql) => {
       const { snapshot } = record;
+      const locked = await sql<{ id: string; revision: number | string }[]>`
+        SELECT id, revision
+          FROM briefd_campaigns
+         WHERE id = ${snapshot.id}
+           AND owner_session_hash = ${record.ownerSessionHash}
+         FOR UPDATE
+      `;
+      if (!locked[0] || Number(locked[0].revision) !== expectedRevision) return "revision-conflict" as const;
+
+      if (unresolvedRowIds(snapshot).length > 0) {
+        const activeShares = await sql<{ exists: boolean }[]>`
+          SELECT EXISTS (
+            SELECT 1
+              FROM briefd_share_tokens
+             WHERE campaign_id = ${snapshot.id}
+               AND revoked_at IS NULL
+               AND (expires_at IS NULL OR expires_at > ${now})
+          ) AS exists
+        `;
+        if (activeShares[0]?.exists) return "active-share-conflict" as const;
+      }
+
       const updated = await sql<{ id: string }[]>`
         UPDATE briefd_campaigns
            SET name = ${snapshot.campaignName},
@@ -291,11 +313,11 @@ export class PostgresCampaignRepository implements CampaignRepository {
            AND revision = ${expectedRevision}
         RETURNING id
       `;
-      if (updated.length === 0) return false;
+      if (updated.length === 0) return "revision-conflict" as const;
 
       await sql`DELETE FROM briefd_campaign_rows WHERE campaign_id = ${snapshot.id}`;
       await insertSnapshotRows(sql, snapshot);
-      return true;
+      return "replaced" as const;
     });
   }
 
@@ -313,15 +335,41 @@ export class PostgresCampaignRepository implements CampaignRepository {
     return rows.map(storedShare);
   }
 
-  async createShare(share: StoredShare): Promise<void> {
-    await this.sql`
-      INSERT INTO briefd_share_tokens (
-        id, campaign_id, token_hash, created_at, expires_at, revoked_at
-      ) VALUES (
-        ${share.id}, ${share.campaignId}, ${share.tokenHash}, ${share.createdAt},
-        ${share.expiresAt}, ${share.revokedAt}
-      )
-    `;
+  async createShare(share: StoredShare, now: string) {
+    return this.sql.begin(async (sql) => {
+      const locked = await sql<{ id: string }[]>`
+        SELECT id
+          FROM briefd_campaigns
+         WHERE id = ${share.campaignId}
+         FOR UPDATE
+      `;
+      if (!locked[0]) return "campaign-not-found" as const;
+
+      const expiresAt = share.expiresAt ? Date.parse(share.expiresAt) : null;
+      const shareIsActive = !share.revokedAt && (expiresAt === null || expiresAt > Date.parse(now));
+      if (shareIsActive) {
+        const unresolved = await sql<{ exists: boolean }[]>`
+          SELECT EXISTS (
+            SELECT 1
+              FROM briefd_campaign_rows AS r
+              LEFT JOIN briefd_resolved_formats AS f ON f.campaign_row_id = r.id
+             WHERE r.campaign_id = ${share.campaignId}
+               AND f.id IS NULL
+          ) AS exists
+        `;
+        if (unresolved[0]?.exists) return "campaign-unresolved" as const;
+      }
+
+      await sql`
+        INSERT INTO briefd_share_tokens (
+          id, campaign_id, token_hash, created_at, expires_at, revoked_at
+        ) VALUES (
+          ${share.id}, ${share.campaignId}, ${share.tokenHash}, ${share.createdAt},
+          ${share.expiresAt}, ${share.revokedAt}
+        )
+      `;
+      return "created" as const;
+    });
   }
 
   async findShareByTokenHash(tokenHash: string): Promise<StoredShare | null> {
