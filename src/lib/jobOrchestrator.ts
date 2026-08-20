@@ -139,9 +139,7 @@ function detectSheetAndHeader(workbook: ExcelJS.Workbook): {
         }
     }
 
-    if (!best || best.score === 0) {
-        throw new Error("No recognizable media-plan header row was found in the workbook.");
-    }
+    if (!best) throw new Error("No non-empty worksheet rows were found in the workbook.");
 
     return best;
 }
@@ -154,7 +152,7 @@ function detectHeaderInWorksheet(worksheet: ExcelJS.Worksheet): { headerRow: num
         const score = mappingScore(mapping);
         if (!best || score > best.score) best = { headerRow: rowNumber, mapping, score };
     }
-    if (!best || best.score === 0) throw new Error(`No recognizable media-plan header row was found in worksheet ${worksheet.name}.`);
+    if (!best) throw new Error(`No non-empty rows were found in worksheet ${worksheet.name}.`);
     return best;
 }
 
@@ -308,6 +306,9 @@ export async function parseExcelBuffer(
     const columns = columnsForRow(worksheet.getRow(headerRow));
     const warnings: string[] = [];
 
+    if (!options.mapping && mappingScore(detectedMapping) === 0) {
+        warnings.push("No standard header names were recognized. Choose the header row and map the columns manually.");
+    }
     if (mapping.publisher == null) warnings.push("Publisher column needs to be mapped.");
     if (mapping.format == null) warnings.push("Format column needs to be mapped.");
     if (mapping.deadline == null) warnings.push("Deadline column was not detected.");

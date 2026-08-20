@@ -233,7 +233,7 @@ describe("parseExcelBuffer", () => {
         expect(first.rows[0].id).toBe(second.rows[0].id);
     });
 
-    it("skips empty rows and rejects workbooks without recognizable headers", async () => {
+    it("skips empty rows and returns a manual mapping structure for unknown headers", async () => {
         const buffer = await buildWorkbook(
             ["Campaign", "Publisher", "Format"],
             [["Black Friday", "Ena Håbo-Tidningen", "Print Spread"], ["", "", ""]],
@@ -241,9 +241,26 @@ describe("parseExcelBuffer", () => {
         expect((await parseExcelBuffer(buffer)).rows).toHaveLength(1);
 
         const unknown = await workbookBuffer((workbook) => {
-            workbook.addWorksheet("Sheet 1").addRow(["Nothing useful"]);
+            const sheet = workbook.addWorksheet("Sheet 1");
+            sheet.addRow(["Vendor", "Placement"]);
+            sheet.addRow(["LinkedIn", "Single Image — Square"]);
         });
-        await expect(parseExcelBuffer(unknown)).rejects.toThrow(/header row/);
+        const provisional = await parseExcelBuffer(unknown);
+        expect(provisional).toMatchObject({
+            sheetName: "Sheet 1",
+            headerRow: 1,
+            columns: [{ index: 1, label: "Vendor" }, { index: 2, label: "Placement" }],
+            mapping: {},
+            rows: [],
+        });
+        expect(provisional.warnings[0]).toContain("map the columns manually");
+
+        const mapped = await parseExcelBuffer(unknown, {
+            sheetName: "Sheet 1",
+            headerRow: 1,
+            mapping: { publisher: 1, format: 2 },
+        });
+        expect(mapped.rows[0]).toMatchObject({ publisher: "LinkedIn", format: "Single Image — Square" });
     });
 });
 
