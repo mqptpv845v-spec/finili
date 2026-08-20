@@ -1,6 +1,6 @@
 # Briefd — product assessment and execution plan
 
-> **Implementation status, 2026-08-20:** the historical audit facts below describe `3e81757`. Phases 1–6 are now materially implemented. Specific-backed persistence, owner reload, live shared revisions, view-only authorization, and revocation passed repository integration and two isolated browser sessions. Validation still uses synthetic plans, so neither real-plan coverage nor external sharing is claimed.
+> **Implementation status, 2026-08-20:** the historical audit facts below describe `3e81757`. Phases 1–7 are now materially implemented and locally verified. Specific-backed persistence, owner reload, live shared revisions, view-only authorization, and revocation passed repository integration and two isolated browser sessions. Validation still uses synthetic plans, so neither real-plan coverage nor external sharing is claimed.
 
 *Evidence-backed discovery, 2026-08-20. Code facts and observed runtime behavior from the original read-only audit are cited throughout; product inferences and recommendations are labelled as such. This document remains the execution contract, with the status above taking precedence over historical present-tense findings.*
 
@@ -241,6 +241,8 @@ The ordering below deliberately prioritises one complete vertical workflow over 
 **Risks.** Schema design and accidental permission leakage. Keep the model minimal: a campaign owns source-row records, resolved formats, unresolved rows, and share tokens.
 
 ### Phase 7 — Closeout
+
+**Implementation result, 2026-08-20.** Completed with keyboard and focus hardening, live announcements, responsive calendar and workspace checks, truthful capability copy, a clean 98-test non-database gate, 7 real-Postgres integration tests, a successful production build, a sealed phone/desktop UI review with zero axe violations, and a clean whole-branch autoreview.
 
 **Objective.** Harden accessibility, reliability, and documentation accuracy.
 **User-visible outcome.** Visible focus styles, screen-reader announcements, labelled controls, a scrollable mobile calendar, and no UI that claims an unavailable capability.
