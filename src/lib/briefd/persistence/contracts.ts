@@ -20,9 +20,13 @@ export interface OwnerCampaignResponse {
   shares: { id: string; createdAt: string; expiresAt: string | null }[];
 }
 
+export type SharedFormatData = Omit<FormatData, "sourceRow" | "deadlineRaw" | "metadata">;
+
 export interface SharedCampaignResponse {
   access: "view";
-  campaign: Pick<CampaignSnapshot, "id" | "revision" | "clientName" | "campaignName" | "formats">;
+  campaign: Pick<CampaignSnapshot, "id" | "revision" | "clientName" | "campaignName"> & {
+    formats: SharedFormatData[];
+  };
 }
 
 export function unresolvedRowIds(snapshot: Pick<CampaignSnapshot, "rows" | "formats">): string[] {
@@ -32,6 +36,12 @@ export function unresolvedRowIds(snapshot: Pick<CampaignSnapshot, "rows" | "form
 
 export function sharedCampaign(snapshot: CampaignSnapshot): SharedCampaignResponse {
   if (unresolvedRowIds(snapshot).length > 0) throw new Error("Resolve every imported row before sharing.");
+  const formats = snapshot.formats.map(({ sourceRow, deadlineRaw, metadata, ...format }) => {
+    void sourceRow;
+    void deadlineRaw;
+    void metadata;
+    return format;
+  });
   return {
     access: "view",
     campaign: {
@@ -39,7 +49,7 @@ export function sharedCampaign(snapshot: CampaignSnapshot): SharedCampaignRespon
       revision: snapshot.revision,
       clientName: snapshot.clientName,
       campaignName: snapshot.campaignName,
-      formats: snapshot.formats,
+      formats,
     },
   };
 }

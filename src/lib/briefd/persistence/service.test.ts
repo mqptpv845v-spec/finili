@@ -51,10 +51,24 @@ describe("CampaignService", () => {
 
   it("creates redacted view-only links and makes revocation immediate", async () => {
     const repository = new MemoryRepository(); const service = new CampaignService(repository, fixedNow);
-    const created = await service.createCampaign(draft); const campaignId = created.response.campaign.id;
+    const created = await service.createCampaign({
+      ...draft,
+      resolutions: [{
+        rowId: sourceRow.id,
+        kind: "brain",
+        specId: spec.id,
+        deadline: sourceRow.deadline,
+        deadlineRaw: "24 Sep 2026",
+        metadata: "internal import metadata",
+      }],
+    });
+    const campaignId = created.response.campaign.id;
     const share = await service.createShare(campaignId, created.ownerSecret);
     const viewed = await service.loadSharedCampaign(share.token);
     expect(viewed.access).toBe("view"); expect("rows" in viewed.campaign).toBe(false);
+    expect(viewed.campaign.formats[0]).not.toHaveProperty("sourceRow");
+    expect(viewed.campaign.formats[0]).not.toHaveProperty("deadlineRaw");
+    expect(viewed.campaign.formats[0]).not.toHaveProperty("metadata");
     await service.revokeShare(campaignId, share.id, created.ownerSecret);
     await expect(service.loadSharedCampaign(share.token)).rejects.toMatchObject({ status: 404 });
   });
