@@ -1,15 +1,25 @@
 import { describe, it, expect } from "vitest";
-import { matchToBrain } from "@/lib/jobOrchestrator";
+import { matchToBrain, type MediaPlanRow } from "@/lib/jobOrchestrator";
 import { mapJobsToFormats } from "./mapJobs";
+
+function mediaPlanRow(overrides: Partial<MediaPlanRow> = {}): MediaPlanRow {
+    return {
+        id: "row-2-test",
+        source: { sheetName: "Mediaplan", rowNumber: 2 },
+        campaign: "Black Friday",
+        publisher: "SvD",
+        format: "Helsida (Stående)",
+        deadline: "2026-09-24",
+        deadlineRaw: "2026-09-24",
+        notes: "",
+        rawValues: {},
+        ...overrides,
+    };
+}
 
 describe("mapJobsToFormats", () => {
     it("maps a matched print job to a complete format card", () => {
-        const job = matchToBrain({
-            Campaign: "Black Friday",
-            Publisher: "SvD",
-            Format: "Helsida (Stående)",
-            Deadline: "24 Sep",
-        });
+        const job = matchToBrain(mediaPlanRow());
         const { formats, unmatched, campaignName } = mapJobsToFormats([job]);
 
         expect(unmatched).toHaveLength(0);
@@ -26,11 +36,13 @@ describe("mapJobsToFormats", () => {
     });
 
     it("uses pixel dimensions and simplified ratios for digital specs", () => {
-        const job = matchToBrain({
-            Campaign: "BF",
-            Publisher: "Clear Channel",
-            Format: "Play Digital",
-        });
+        const job = matchToBrain(mediaPlanRow({
+            campaign: "BF",
+            publisher: "Clear Channel",
+            format: "Play Digital",
+            deadline: null,
+            deadlineRaw: "",
+        }));
         const { formats } = mapJobsToFormats([job]);
         expect(formats[0].dimensions).toBe("1080 × 1920 px");
         expect(formats[0].ratioLabel).toBe("9:16");
@@ -39,8 +51,8 @@ describe("mapJobsToFormats", () => {
 
     it("reports unmatched rows separately instead of faking cards", () => {
         const jobs = [
-            matchToBrain({ Campaign: "BF", Publisher: "SvD", Format: "Helsida (Stående)" }),
-            matchToBrain({ Campaign: "BF", Publisher: "Aftonbladet", Format: "Panorama" }),
+            matchToBrain(mediaPlanRow({ campaign: "BF" })),
+            matchToBrain(mediaPlanRow({ campaign: "BF", publisher: "Aftonbladet", format: "Panorama" })),
         ];
         const { formats, unmatched } = mapJobsToFormats(jobs);
         expect(formats).toHaveLength(1);

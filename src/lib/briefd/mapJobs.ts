@@ -3,8 +3,12 @@ import type { CategoryTag, FormatData, SectionCategory } from "./types";
 import { CATEGORIES } from "./categories";
 
 export interface UnmatchedRow {
+    id: string;
+    source: OrchestratedJob["source"];
     publisher: string;
     format: string;
+    deadline: string | null;
+    deadlineRaw: string;
     error: string;
 }
 
@@ -40,6 +44,15 @@ function ratioLabel(width: number, height: number): string {
         : `1:${(height / width).toFixed(2)}`;
 }
 
+function formatDeadline(value: string | null): string {
+    if (!value) return "TBD";
+    const [year, month, day] = value.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
+    if (Number.isNaN(date.getTime())) return "TBD";
+    const monthLabel = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][date.getMonth()];
+    return `${date.getDate()} ${monthLabel}`;
+}
+
 /**
  * Turn the parse API's jobs into Briefd format cards.
  * Matched jobs become cards; unmatched rows are reported separately so the
@@ -53,8 +66,12 @@ export function mapJobsToFormats(jobs: OrchestratedJob[]): MappedPlan {
         const spec = job.specs;
         if (job.status === "error" || !spec) {
             unmatched.push({
+                id: job.id,
+                source: job.source,
                 publisher: job.publisher,
                 format: job.formatName,
+                deadline: job.deadline,
+                deadlineRaw: job.deadlineRaw,
                 error: job.error ?? "No matching spec found",
             });
             return;
@@ -71,7 +88,7 @@ export function mapJobsToFormats(jobs: OrchestratedJob[]): MappedPlan {
         if (spec.bleed_mm > 0) safeParts.push(`Bleed ${spec.bleed_mm} mm`);
 
         formats.push({
-            id: `${spec.id}-${index + 1}`,
+            id: job.id || `${spec.id}-${index + 1}`,
             categoryTag: isCategoryTag(spec.category_tag) ? spec.category_tag : "Display",
             publisher: spec.publisher,
             formatName: spec.name,
@@ -82,7 +99,7 @@ export function mapJobsToFormats(jobs: OrchestratedJob[]): MappedPlan {
             widthRatio: width,
             heightRatio: height,
             ratioLabel: ratioLabel(width, height),
-            deadline: job.deadline || "TBD",
+            deadline: formatDeadline(job.deadline),
             safeZone: safeParts.length > 0 ? safeParts.join(" · ") : "None",
             fileType: spec.color.pdf_preset,
             // The Brain does not carry publisher spec URLs yet; the card

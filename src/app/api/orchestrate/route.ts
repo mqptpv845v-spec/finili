@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
         const mediaPlanBuffer = Buffer.from(await mediaPlanFile.arrayBuffer());
         const masterBuffer = Buffer.from(await masterFile.arrayBuffer());
 
-        const parsedRows = await parseExcelBuffer(mediaPlanBuffer);
-        const jobs: OrchestratedJob[] = parsedRows.map(row => matchToBrain(row));
+        const parsedPlan = await parseExcelBuffer(mediaPlanBuffer);
+        const jobs: OrchestratedJob[] = parsedPlan.rows.map(row => matchToBrain(row));
         const validJobs = jobs.filter(job => job.status !== "error");
 
         if (validJobs.length === 0) {
