@@ -54,7 +54,7 @@ export function FormatDetailView({ format, onBack }: Props) {
         </div>
       </div>
 
-      <div className="bg-light p-8 sm:p-12 overflow-auto">
+      <div className="bg-light p-8 sm:p-12 overflow-auto" tabIndex={0} role="region" aria-label={`${format.formatName} artboard preview`}>
         <div className="mx-auto flex flex-col items-center gap-3" style={{ width }}>
           <span className="text-label text-black/60">Width: {format.dimensions.width} {format.dimensions.unit}</span>
           <div className="relative bg-white border border-black/30 flex items-center justify-center p-5 text-center" style={{ width, height }}>
