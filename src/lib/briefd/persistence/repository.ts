@@ -176,7 +176,7 @@ async function readCampaign(sql: TransactionSql, id: string): Promise<StoredCamp
            format_name, deadline::text AS deadline, deadline_raw, notes, raw_values
       FROM briefd_campaign_rows
      WHERE campaign_id = ${id}
-     ORDER BY sort_order ASC
+     ORDER BY sort_order ASC, row_number ASC, id ASC
   `;
   const rows: MediaPlanRow[] = storedRows.map((row) => ({
     id: row.source_row_id,
@@ -200,7 +200,7 @@ async function readCampaign(sql: TransactionSql, id: string): Promise<StoredCamp
       FROM briefd_resolved_formats AS f
       JOIN briefd_campaign_rows AS r ON r.id = f.campaign_row_id
      WHERE r.campaign_id = ${id}
-     ORDER BY f.sort_order ASC
+     ORDER BY f.sort_order ASC, r.row_number ASC, r.id ASC
   `;
   const formats: FormatData[] = storedFormats.map((format) => {
     const sourceRow = sourceRows.get(format.source_row_id);
