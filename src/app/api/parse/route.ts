@@ -8,6 +8,35 @@ import {
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 const MAX_REQUEST_BYTES = MAX_UPLOAD_BYTES + 1024 * 1024;
 
+class UploadTooLargeError extends Error {}
+
+async function boundedFormData(req: NextRequest): Promise<FormData> {
+    if (!req.body) return new FormData();
+    const reader = req.body.getReader();
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        total += value.byteLength;
+        if (total > MAX_REQUEST_BYTES) {
+            await reader.cancel();
+            throw new UploadTooLargeError();
+        }
+        chunks.push(value);
+    }
+    const bytes = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+    const contentType = req.headers.get("content-type");
+    if (!contentType) throw new Error("Missing multipart content type.");
+    return new Request(req.url, {
+        method: "POST",
+        headers: { "content-type": contentType },
+        body: bytes.buffer,
+    }).formData();
+}
+
 function parseMapping(value: FormDataEntryValue | null): MediaPlanColumnMapping | undefined {
     if (typeof value !== "string" || value.trim() === "") return undefined;
     const parsed: unknown = JSON.parse(value);
@@ -33,7 +62,7 @@ export async function POST(req: NextRequest) {
         if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_BYTES) {
             return NextResponse.json({ error: "The media plan must be smaller than 10 MB." }, { status: 413 });
         }
-        const formData = await req.formData();
+        const formData = await boundedFormData(req);
         const mediaPlanFile = formData.get("mediaPlan");
 
         if (!(mediaPlanFile instanceof File)) {
@@ -69,6 +98,9 @@ export async function POST(req: NextRequest) {
         });
 
     } catch (err: unknown) {
+        if (err instanceof UploadTooLargeError) {
+            return NextResponse.json({ error: "The media plan must be smaller than 10 MB." }, { status: 413 });
+        }
         const detail = err instanceof Error ? err.message : String(err);
         console.error("Media-plan parsing failed:", detail);
         return NextResponse.json(
