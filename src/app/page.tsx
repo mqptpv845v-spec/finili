@@ -241,7 +241,7 @@ export default function Home() {
                   </h3>
                 </div>
                 <p className="text-body text-cyan/90 mt-6">
-                  Today, copy or export the reviewed requirements locally. Revocable view-only sharing remains disabled until its local database flow has been proven end to end.
+                  Today, copy or export reviewed requirements and create revocable view-only links inside the local Specific environment. External availability is not claimed.
                 </p>
               </div>
             </div>

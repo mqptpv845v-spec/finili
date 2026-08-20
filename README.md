@@ -4,7 +4,7 @@
 
 Finali is a product direction with one usable local Briefd workflow and a separate automation prototype:
 
-1. **Briefd** — parse an Excel media plan, confirm its column mapping, and resolve each row against a cited provisional Brain spec or visibly user-provided values. Cards, calendar, detail, copy, and export use the same structured data. Local persistence and sharing are under implementation and are not externally available.
+1. **Briefd** — parse an Excel media plan, confirm its column mapping, and resolve each row against a cited provisional Brain spec or visibly user-provided values. Cards, calendar, detail, copy, and export use the same structured data. Specific-backed persistence and revocable view-only links are implemented and verified locally; external availability is not claimed.
 2. **Finali AI** (concept plus local prototype) — a macOS-only API can drive a local InDesign installation for PDF-compatible jobs. It is not a hosted, validated production service.
 
 No real agency media plans are available in this repository, so the parser and 12-format Brain are tested with synthetic fixtures and authoritative public sources. Useful real-world coverage is not yet claimed.
@@ -42,7 +42,7 @@ Open http://127.0.0.1:3000 — the marketing page is at `/`, the Briefd app at `
 | `npm run lint`      | ESLint                                |
 | `npm run typecheck` | TypeScript, no emit                   |
 | `specific dev`      | Local dev environment via Specific    |
-| `specific deploy`   | Deploy to Specific Cloud              |
+| `specific deploy`   | Infrastructure deploy command; not run or verified for this release |
 
 ## Repository map
 

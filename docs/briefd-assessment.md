@@ -1,6 +1,6 @@
 # Briefd — product assessment and execution plan
 
-> **Implementation status, 2026-08-20:** the historical audit facts below describe `3e81757`. Phases 1–5 are now materially implemented; Phase 6 runtime persistence and sharing are not complete. Validation still uses synthetic plans, so neither real-plan coverage nor external sharing is claimed.
+> **Implementation status, 2026-08-20:** the historical audit facts below describe `3e81757`. Phases 1–6 are now materially implemented. Specific-backed persistence, owner reload, live shared revisions, view-only authorization, and revocation passed repository integration and two isolated browser sessions. Validation still uses synthetic plans, so neither real-plan coverage nor external sharing is claimed.
 
 *Evidence-backed discovery, 2026-08-20. Code facts and observed runtime behavior from the original read-only audit are cited throughout; product inferences and recommendations are labelled as such. This document remains the execution contract, with the status above taking precedence over historical present-tense findings.*
 
@@ -228,6 +228,8 @@ The ordering below deliberately prioritises one complete vertical workflow over 
 **Risks.** The artboard overlays need a defined fallback for specs with unknown safe zones; showing nothing is correct, showing a guess is not.
 
 ### Phase 6 — Persistence and local share-link proof
+
+**Implementation result, 2026-08-20.** Completed locally with normalized Postgres storage, separate hash-only owner/share capabilities, optimistic revisions, redacted shared DTOs, active-link/update serialization, owner reload, and immediate revocation. The browser proof uses `?campaign=<campaign-id>` plus an HttpOnly owner capability cookie for editing and `?share=<opaque-token>` for view-only access.
 
 **Objective.** Make campaigns durable and prove view-only share-link mechanics locally.
 **User-visible outcome.** The plan is saved on upload, `/briefd?campaign=<opaque-token>` loads it in a second local browser session, and reloads are safe.

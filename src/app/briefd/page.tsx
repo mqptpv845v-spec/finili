@@ -329,7 +329,7 @@ function BriefdApp() {
     </main>
 
     <div className="w-full px-5 sm:px-[30px] pb-10"><section className="bg-plum text-magenta p-8 sm:p-12 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8"><div className="max-w-2xl"><h2 className="text-title sm:text-section font-bold tracking-tight">Production automation is a separate Finali product direction.</h2><p className="text-value mt-3">Briefd currently interprets and documents media-plan requirements. It does not generate or validate finished artwork.</p></div><Button variant="contrast" size="lg" onClick={() => setFinaliOpen(true)}>What is planned</Button></section></div>
-    <div className="w-full px-5 sm:px-[30px] pb-5"><CropFrame><footer className="bg-taupe text-yellow px-6 sm:px-10 py-6 flex flex-col sm:flex-row justify-between gap-4 text-label font-semibold"><span><strong>Briefd</strong> by Finali Technologies AB · Stockholm</span><span>Local utility · provisional source coverage</span></footer></CropFrame></div>
+    <div className="w-full px-5 sm:px-[30px] pb-5"><CropFrame><footer className="bg-taupe text-yellow px-6 sm:px-10 py-6 flex flex-col sm:flex-row justify-between gap-4 text-label font-semibold"><span><strong>Briefd</strong> by Finali · Stockholm</span><span>Local utility · provisional source coverage</span></footer></CropFrame></div>
     <FinaliAIModal isOpen={finaliOpen} onClose={() => setFinaliOpen(false)} />
     {ownerCampaign && <ShareLiveBriefModal
       isOpen={shareOpen}

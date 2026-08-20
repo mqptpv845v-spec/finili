@@ -2,7 +2,7 @@
 
 ## Status boundary
 
-Briefd is a local-first, correctable media-plan utility. Its parser, sourced provisional Brain, correction workflow, and three workspace views are implemented. PostgreSQL schema and persistence domain contracts exist, but durable runtime routes and revocable sharing are not considered shipped until the Specific-backed flow passes reload, authorization, and two-browser revocation checks.
+Briefd is a local-first, correctable media-plan utility. Its parser, sourced provisional Brain, correction workflow, three workspace views, PostgreSQL persistence, and revocable view-only links are implemented. The Specific-backed flow has passed repository integration, reload, authorization, live-revision, two-browser, and revocation checks. Deployment and external availability remain unverified.
 
 Finali AI is separate. `/api/orchestrate` is a macOS-only prototype that drives a locally installed Adobe InDesign; it is not a hosted or validated production engine.
 
@@ -18,7 +18,11 @@ Next.js 16 App Router, React 19, strict TypeScript, Tailwind CSS v4, ExcelJS, Vi
 | `/briefd` | Implemented | Upload, import review, correction, and workspace |
 | `POST /api/parse` | Implemented | Bounded `.xlsx` parsing and Brain matching |
 | `POST /api/orchestrate` | Local prototype | InDesign PDF export for PDF-compatible Brain jobs only |
-| Campaign/share routes | Not wired yet | Planned binding of the tested persistence service to Specific Postgres |
+| `POST /api/campaigns` | Implemented | Create a normalized campaign and set its per-campaign owner capability cookie |
+| `GET, PUT, DELETE /api/campaigns/[id]` | Implemented | Owner-only load, optimistic update, and deletion |
+| `POST /api/campaigns/[id]/shares` | Implemented | Create an opaque view-only capability |
+| `DELETE /api/campaigns/[id]/shares/[shareId]` | Implemented | Owner-only immediate revocation |
+| `GET /api/shares/[token]` | Implemented | Load the redacted view-only campaign DTO |
 
 ## Briefd data flow
 
@@ -54,7 +58,7 @@ Key modules:
 - Shared DTOs omit workbook rows, raw values, source filename, mapping, owner material, and share hashes.
 - Sharing is blocked while any imported row remains unresolved.
 
-These are implemented domain invariants. Runtime/database verification remains required before the sharing UI is enabled.
+These invariants are enforced by the runtime and repository. The database suite covers exact round-trips, optimistic replacement, hash-only capabilities, active-share/update serialization, expiry, revocation, and cascade deletion.
 
 ## InDesign prototype
 
@@ -68,9 +72,9 @@ Non-PDF Brain jobs are rejected before InDesign runs. The prototype still depend
 ## Evidence and quality gates
 
 - `npm run check` — typecheck, lint, and focused tests.
-- `npm run build` — normal production build; `next build --webpack` is an equivalent fallback when the execution sandbox blocks Turbopack worker ports.
+- `npm run build` — production build through Next.js' webpack builder, avoiding the execution sandbox's Turbopack worker-port restriction.
 - `specific check` — validates infrastructure and Reshape migrations.
-- Browser acceptance is required for the complete upload/correction/view flow and, once wired, two-session persistence/share/revocation.
+- Browser acceptance covers the upload/correction/view flow plus two isolated sessions for owner reload, shared revision updates, view-only controls, and revocation.
 - Autoreview must return no actionable findings after the final runtime and UI changes.
 
 See `docs/briefd-release-contract.md` for the precise evidence boundary and `docs/briefd-assessment.md` for the execution plan.
