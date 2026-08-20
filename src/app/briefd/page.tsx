@@ -113,6 +113,7 @@ function BriefdApp() {
         }
         if (campaignId && response.access !== "edit") throw new Error("The owner campaign response was invalid.");
         if (shareToken && response.access !== "view") throw new Error("The shared campaign response was invalid.");
+        if (response.access === "edit" && !Array.isArray(response.shares)) throw new Error("The owner campaign response was incomplete.");
 
         setFormats(response.campaign.formats);
         setUnmatched([]);
@@ -223,7 +224,7 @@ function BriefdApp() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(existingCampaign ? { ...draft, id: existingCampaign.id, revision: existingCampaign.revision } : draft),
       });
-      if (response.access !== "edit") throw new Error("The saved campaign response was invalid.");
+      if (response.access !== "edit" || !Array.isArray(response.shares)) throw new Error("The saved campaign response was invalid.");
       setFormats(response.campaign.formats);
       setPlanMeta({ client: response.campaign.clientName, campaign: response.campaign.campaignName });
       setWorkspaceAccess("owner");
@@ -249,10 +250,19 @@ function BriefdApp() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ expiresAt: null }),
     });
-    setOwnerCampaign((current) => current ? {
-      ...current,
-      shares: [...current.shares, { id: created.id, createdAt: new Date().toISOString(), expiresAt: null }],
-    } : current);
+    if (typeof created.id !== "string" || typeof created.token !== "string") throw new Error("The new share response was incomplete.");
+    try {
+      const refreshed = await requestJson<OwnerCampaignResponse>(`/api/campaigns/${encodeURIComponent(ownerCampaign.campaign.id)}`, {
+        credentials: "same-origin",
+      });
+      if (refreshed.access !== "edit" || !Array.isArray(refreshed.shares)) throw new Error("The refreshed campaign response was incomplete.");
+      setOwnerCampaign(refreshed);
+    } catch {
+      setOwnerCampaign((current) => current ? {
+        ...current,
+        shares: [...current.shares, { id: created.id, createdAt: "", expiresAt: null }],
+      } : current);
+    }
     return created;
   };
 
