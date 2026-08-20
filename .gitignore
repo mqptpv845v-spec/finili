@@ -49,6 +49,7 @@ next-env.d.ts
 *.idml
 *.pdf
 *.xlsx
+!samples/briefd-test-plan.xlsx
 *.fig
 *.sketch
 *.numbers
@@ -59,6 +60,9 @@ next-env.d.ts
 # runtime output from the InDesign pipeline
 /.tmp/
 /public/output/
+
+# generated billing documents can contain personal and financial data
+/invoices/
 
 # macOS resource forks
 __MACOSX/

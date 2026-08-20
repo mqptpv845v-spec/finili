@@ -1,5 +1,7 @@
 # Briefd (by Finali): Projektstatus & Konceptsammanfattning
 
+> **Konceptdokument — inte verifierad produktstatus.** Funktionerna nedan innehåller målbild och modellgenererade förslag. Se `docs/briefd-release-contract.md` för vad som faktiskt har verifierats.
+
 Det här dokumentet sammanfattar visionen, arkitekturen och de unika funktionerna för Briefd (by Finali) inför er genomgång.
 
 ---

@@ -1,4 +1,4 @@
-import type { SectionCategory } from "./types";
+import type { CategoryTag, SectionCategory } from "./types";
 
 // Single source of truth for the four Briefd categories.
 // Every view (sections, sidebar, calendar, spreadsheet) styles itself from
@@ -89,7 +89,7 @@ export const CATEGORIES: Record<SectionCategory, CategoryMeta> = {
     number: "04",
     title: "Printed Media",
     shortLabel: "Printed Media",
-    description: "Dagens industri tabloid, half page and magazine with ICC profiles",
+    description: "Publisher-specified print dimensions and recorded delivery requirements",
     stripe: "bg-light border-b border-black/10",
     dot: "bg-graphite",
     hoverBg: "hover:bg-light",
@@ -108,3 +108,10 @@ export const CATEGORY_ORDER: SectionCategory[] = [
   "Out of Home (OOH & DOOH)",
   "Newsprint & Magazines (Print)",
 ];
+
+export const CATEGORY_TAGS: Record<SectionCategory, CategoryTag> = {
+  "Social Media (SoMe)": "SoMe",
+  "Digital Display & High-Impact": "Display",
+  "Out of Home (OOH & DOOH)": "OOH",
+  "Newsprint & Magazines (Print)": "Print",
+};

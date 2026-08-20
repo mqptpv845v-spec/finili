@@ -83,6 +83,11 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  :focus-visible {
+    outline: 2px solid var(--color-graphite);
+    outline-offset: 3px;
+  }
+
   /* HTML Tag Defaults */
   h1, .h1 {
     font-size: var(--font-h1-size);

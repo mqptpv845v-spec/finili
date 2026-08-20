@@ -46,7 +46,7 @@ export default function Home() {
 
           {/* Lead Ingress */}
           <p className="text-lead text-graphite/85 max-w-4xl">
-            Static sheets and messy email chains cause version chaos and costly production errors. Briefd translates your media plans into clean, scale-accurate format cards shared via a single live link. Completely free.
+            Static sheets and messy email chains cause version chaos. Briefd turns supported .xlsx rows into traceable format cards, then asks you to review unmatched or uncertain data before using it.
           </p>
 
           {/* Action Buttons */}
@@ -70,6 +70,7 @@ export default function Home() {
               src="/bento-bg.png"
               alt="Continuous halftone landscape backdrop"
               fill
+              loading="eager"
               unoptimized
               className="object-cover"
             />
@@ -103,7 +104,7 @@ export default function Home() {
                   We built Briefd (by Finali) as a focused, lightweight tool to eliminate spreadsheet chaos for media agencies, brand managers, and production teams.
                 </p>
                 <p className="text-[clamp(0.75rem,0.92vw,1.1rem)] font-normal leading-[1.38]">
-                  By creating a clean visual workspace for campaign delivery, we are building the industry&apos;s most reliable ad spec ecosystem while laying the foundation for next-generation automated artwork production.
+                  The current local utility is backed by 12 provisional, cited specifications across social, display, out-of-home, and print. Broader coverage and artwork automation remain product directions, not shipped claims.
                 </p>
               </div>
             </div>
@@ -137,11 +138,11 @@ export default function Home() {
             It is a translation problem.
           </h2>
 
-          {/* Video / Animation Placeholder Box (internal note to the team) */}
+          {/* Product-status explanation */}
           <div className="w-full aspect-[16/9] md:aspect-[21/9] min-h-[300px] md:min-h-[440px] bg-white flex flex-col items-center justify-center text-center gap-2 p-8">
-            <span className="text-ui font-medium text-graphite/50">Internal note</span>
+            <span className="text-ui font-medium text-graphite/70">What Briefd does today</span>
             <span className="text-lead font-medium text-graphite/70 max-w-3xl">
-              Animation eller förklarande video, eller illustration av något slag.
+              It parses workbooks, preserves source rows, distinguishes cited Brain specifications from user-provided corrections, and keeps every workspace view on one structured data model.
             </span>
           </div>
         </section>
@@ -151,11 +152,11 @@ export default function Home() {
       <CropFrame className="w-full">
         <section className="w-full bg-petrol text-cyan px-6 sm:px-12 md:px-20 py-16 sm:py-24 md:py-30 flex flex-col items-center justify-center text-center gap-6">
           <h2 className="h1 text-cyan max-w-5xl">
-            One link for the<br />
-            entire team
+            Revocable sharing,<br />
+            proven end to end
           </h2>
           <p className="text-lead text-cyan/90 max-w-4xl">
-            Share with your designers, media agency, and client. Everyone<br className="hidden md:inline" /> stays aligned to the latest live specs without version conflicts.
+            Briefd&apos;s opaque, revocable, view-only links have been verified<br className="hidden md:inline" /> across isolated owner and viewer sessions on the deployed production service.
           </p>
         </section>
       </CropFrame>
@@ -183,6 +184,7 @@ export default function Home() {
               src="/turn-rows-art.png"
               alt="Halftone cloud artwork"
               fill
+              loading="eager"
               unoptimized
               className="object-cover"
             />
@@ -213,7 +215,7 @@ export default function Home() {
                   </h3>
                 </div>
                 <p className="text-body text-cyan/90 mt-6">
-                  Drop in your .xlsx plan. Briefd parses formats, dimensions, publishers, and delivery dates automatically without rigid templates.
+                  Drop in an .xlsx plan. Briefd detects common English and Swedish headers across worksheets, and lets you correct the interpretation before continuing.
                 </p>
               </div>
 
@@ -236,12 +238,12 @@ export default function Home() {
                 <div>
                   <span className="h2 text-cyan leading-none block mb-4">3</span>
                   <h3 className="h3 text-cyan leading-tight">
-                    Share the<br />
-                    live link.
+                    Hand off the<br />
+                    reviewed brief.
                   </h3>
                 </div>
                 <p className="text-body text-cyan/90 mt-6">
-                  Generate a shareable URL. Designers copy dimensions with a single click while planners keep full control over deliveries.
+                  Today, copy or export reviewed requirements and create revocable view-only links on the deployed Specific service.
                 </p>
               </div>
             </div>
@@ -319,7 +321,7 @@ export default function Home() {
               height={30}
               className="h-6 sm:h-7 w-auto cursor-pointer invert"
             />
-            <p className="text-yellow/85 leading-relaxed mt-1">
+            <p className="text-yellow leading-relaxed mt-1">
               The connective infrastructure between media planning and creative execution. Built by agency veterans in Stockholm.
             </p>
           </div>
@@ -327,7 +329,7 @@ export default function Home() {
           {/* Product Col */}
           <div className="flex flex-col gap-2.5">
             <span className="font-bold text-yellow">Product</span>
-            <div className="flex flex-col gap-1.5 text-yellow/85">
+            <div className="flex flex-col gap-1.5 text-yellow">
               <a href="#workflow" className="hover:text-yellow hover:underline transition-all">Briefd (Free Utility)</a>
               <a href="#about" className="hover:text-yellow hover:underline transition-all">Finali Automation (Coming Soon)</a>
               <a href="#workflow" className="hover:text-yellow hover:underline transition-all">Supported Formats</a>
@@ -338,7 +340,7 @@ export default function Home() {
           {/* Company Col */}
           <div className="flex flex-col gap-2.5">
             <span className="font-bold text-yellow">Company</span>
-            <div className="flex flex-col gap-1.5 text-yellow/85">
+            <div className="flex flex-col gap-1.5 text-yellow">
               <a href="#about" className="hover:text-yellow hover:underline transition-all">About Us</a>
               <a href="#workflow" className="hover:text-yellow hover:underline transition-all">Media Agency Network</a>
               <a href="#about" className="hover:text-yellow hover:underline transition-all">Design Philosophy</a>
@@ -348,7 +350,7 @@ export default function Home() {
         </div>
 
         {/* Bottom Tier: Office Locations & Copyright */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-[0.75rem] font-medium text-yellow/75">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-[0.75rem] font-medium text-yellow">
           <div className="flex flex-wrap items-center gap-4">
             <span>Stockholm, Sweden</span>
             <span>·</span>

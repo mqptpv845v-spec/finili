@@ -1,0 +1,35 @@
+[[actions]]
+type = "add_column"
+table = "briefd_campaign_rows"
+
+    [actions.column]
+    name = "sort_order"
+    type = "INTEGER"
+    nullable = false
+    default = "0"
+
+[[actions]]
+type = "add_column"
+table = "briefd_resolved_formats"
+
+    [actions.column]
+    name = "sort_order"
+    type = "INTEGER"
+    nullable = false
+    default = "0"
+
+[[actions]]
+type = "add_column"
+table = "briefd_resolved_formats"
+
+    [actions.column]
+    name = "deadline_raw"
+    type = "TEXT"
+
+[[actions]]
+type = "alter_column"
+table = "briefd_resolved_formats"
+column = "notes"
+
+    [actions.changes]
+    nullable = true

@@ -1,6 +1,6 @@
 # Product — what Finali is and why
 
-*(English summary of the Swedish strategy briefs in [docs/strategy/](strategy/). Those originals remain the source for business detail.)*
+*(English summary of the Swedish strategy briefs in [docs/strategy/](strategy/). This is product vision, not a statement that every feature is implemented. Current evidence and release boundaries are defined in [briefd-release-contract.md](briefd-release-contract.md).)*
 
 ## The problem
 
@@ -12,10 +12,10 @@ Between a media plan (an Excel sheet from the media agency) and finished ad file
 
 ### Briefd — Phase 1, free forever
 
-A lightweight visual web tool that kills the Excel chaos in the creative handoff:
+A local-first visual web tool intended to reduce Excel ambiguity in the creative handoff:
 
-- Drag in an `.xlsx` media plan → each row becomes a **format card** with true proportions, exact dimensions, deadline, safe zones and a link to the publisher's spec page.
-- Share one **zero-login live link** with the whole team. No downloads, no version conflicts.
+- Drag in an `.xlsx` media plan, confirm its interpretation, and resolve each row into a **format card** backed by either cited Brain evidence or visibly user-provided values.
+- Opaque, revocable, view-only links are verified against deployed Specific Postgres in isolated owner and viewer browser sessions, including live revision loading and immediate revocation.
 - Free on purpose: brand awareness, data on which formats/publishers dominate the Nordics, direct contact with the designers who feel the pain, and every "Automate with Finali AI" click is a warm lead.
 
 ### Finali AI — Phase 2, the paid engine
@@ -29,7 +29,7 @@ A deterministic production engine:
 
 ## The three pillars
 
-1. **The spec database ("The Brain")** — machine-readable, continuously verified specs from Nordic media houses and OOH operators (Bonnier News, Schibsted, Clear Channel, JCDecaux, Bauer Media, SDR): dimensions, bleed, safe zones, ICC profiles, PDF/X standard, deadlines, filename conventions. This is the moat. In code: `src/lib/data/brain.json`.
+1. **The spec database ("The Brain")** — currently 12 provisional, cited publisher-format combinations across LinkedIn, Google Display, JCDecaux, Bauer Media Outdoor, and Ena Håbo-Tidningen. Records include only requirements supported by their cited sources. Continuous verification and useful market coverage are goals, not current claims. In code: `src/lib/data/brain.json`.
 2. **Automated file generation** — `.idml` is open XML in a ZIP, so parsing and text injection are cheap server-side. Generative expand only for extreme ratio changes. PDF/X render at export.
 3. **Human-in-the-loop approval** — the legal and quality shield described above.
 
@@ -42,7 +42,7 @@ A deterministic production engine:
 ## Roadmap ideas from the briefs (not yet built)
 
 - **Creative Build Sheet** — cluster booked formats by aspect ratio and compute the minimum number of master layouts ("24 booked formats need only 3 originals"). The most distinctive idea in the briefs.
-- **Zero-login live links** with real-time updates (needs a backend store).
+- **Externally available zero-login links and real-time updates** (local revocable view-only mechanics must be proven first).
 - **Blank template download** — one-click empty InDesign templates with exact measurements, margins and bleed per publisher.
 - **Overset-text detection** in the preview grid (the `anomaly` field in the data model is the stub).
 

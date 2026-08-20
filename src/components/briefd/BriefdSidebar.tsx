@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronRight, RotateCcw } from "lucide-react";
+import { ChevronDown, ChevronRight, FileUp, RotateCcw } from "lucide-react";
 import type { FormatData } from "@/lib/briefd/types";
 import { CATEGORIES, CATEGORY_ORDER } from "@/lib/briefd/categories";
 import { GeometricGlyph } from "@/components/atoms/GeometricGlyph";
@@ -13,9 +13,10 @@ interface BriefdSidebarProps {
   onSelectTab: (tab: "formats" | "calendar" | "table") => void;
   onSelectFormat: (formatId: string | null) => void;
   onSelectCategory: (categoryId: string) => void;
-  onResetPlan: () => void;
-  clientName?: string;
-  campaignName?: string;
+  onReplacePlan?: () => void;
+  onResetPlan?: () => void;
+  clientName: string;
+  campaignName: string;
 }
 
 // Sidebar tree entries, derived from the single category source of truth.
@@ -31,9 +32,10 @@ export function BriefdSidebar({
   onSelectTab,
   onSelectFormat,
   onSelectCategory,
+  onReplacePlan,
   onResetPlan,
-  clientName = "Bevero",
-  campaignName = "Black Friday 2026"
+  clientName,
+  campaignName,
 }: BriefdSidebarProps) {
   // ALL CATEGORIES CLOSED BY DEFAULT
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
@@ -100,6 +102,8 @@ export function BriefdSidebar({
                   onClick={() => toggleCategory(cat.name)}
                   className="p-1 text-black hover:opacity-60 cursor-pointer flex items-center gap-1 shrink-0"
                   title={isOpen ? "Collapse section" : "Expand section"}
+                  aria-expanded={isOpen}
+                  aria-label={`${isOpen ? "Collapse" : "Expand"} ${cat.title}`}
                 >
                   <span className="text-label font-bold text-black/60">{catFormats.length}</span>
                   {isOpen ? (
@@ -135,8 +139,8 @@ export function BriefdSidebar({
                         {/* Geometric Symbol on the Right */}
                         <div className="shrink-0">
                           <GeometricGlyph
-                            widthRatio={item.widthRatio}
-                            heightRatio={item.heightRatio}
+                            widthRatio={item.dimensions.width}
+                            heightRatio={item.dimensions.height}
                             size="inline"
                           />
                         </div>
@@ -152,19 +156,32 @@ export function BriefdSidebar({
 
       {/* 3. Pinned Bottom Footer (No harsh border line, clean button) */}
       <div className="shrink-0 pt-3 pb-2 bg-white flex flex-col gap-1.5">
-        <Button
-          variant="soft"
-          size="sm"
-          onClick={onResetPlan}
-          className="w-full"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Upload new spreadsheet</span>
-        </Button>
+        {onReplacePlan && (
+          <Button
+            variant="soft"
+            size="sm"
+            onClick={onReplacePlan}
+            className="w-full"
+          >
+            <FileUp className="w-3.5 h-3.5" />
+            <span>Update from spreadsheet</span>
+          </Button>
+        )}
+        {onResetPlan && (
+          <Button
+            variant={onReplacePlan ? "outline" : "soft"}
+            size="sm"
+            onClick={onResetPlan}
+            className="w-full"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Start a new import</span>
+          </Button>
+        )}
 
         <div className="flex items-center justify-center gap-1.5 text-label text-black/60 text-center pt-0.5">
           <span className="w-1.5 h-1.5 rounded-full bg-petrol shrink-0" />
-          <span>{formats.length} formats · Live sync active</span>
+          <span>{formats.length} resolved formats</span>
         </div>
       </div>
 

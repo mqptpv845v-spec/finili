@@ -1,0 +1,79 @@
+[[actions]]
+type = "custom"
+start = """
+CREATE TABLE briefd_campaigns (
+  id UUID PRIMARY KEY,
+  owner_session_hash CHAR(64) NOT NULL CHECK (owner_session_hash ~ '^[0-9a-f]{64}$'),
+  name TEXT NOT NULL,
+  client_name TEXT NOT NULL DEFAULT '',
+  source_filename TEXT,
+  sheet_name TEXT NOT NULL,
+  header_row INTEGER NOT NULL CHECK (header_row > 0),
+  column_mapping JSONB NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(column_mapping) = 'object'),
+  revision BIGINT NOT NULL DEFAULT 1 CHECK (revision > 0),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE briefd_campaign_rows (
+  id UUID PRIMARY KEY,
+  campaign_id UUID NOT NULL REFERENCES briefd_campaigns(id) ON DELETE CASCADE,
+  source_row_id TEXT NOT NULL,
+  sheet_name TEXT NOT NULL,
+  row_number INTEGER NOT NULL CHECK (row_number > 0),
+  campaign_name TEXT NOT NULL DEFAULT '',
+  publisher TEXT NOT NULL DEFAULT '',
+  format_name TEXT NOT NULL DEFAULT '',
+  deadline DATE,
+  deadline_raw TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
+  raw_values JSONB NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(raw_values) = 'object'),
+  UNIQUE (campaign_id, source_row_id)
+);
+
+CREATE TABLE briefd_resolved_formats (
+  id UUID PRIMARY KEY,
+  campaign_row_id UUID NOT NULL UNIQUE REFERENCES briefd_campaign_rows(id) ON DELETE CASCADE,
+  trust TEXT NOT NULL CHECK (trust IN ('verified', 'user-provided')),
+  brain_spec_id TEXT,
+  category TEXT NOT NULL,
+  category_tag TEXT NOT NULL,
+  publisher TEXT NOT NULL,
+  format_name TEXT NOT NULL,
+  width DOUBLE PRECISION NOT NULL CHECK (width > 0),
+  height DOUBLE PRECISION NOT NULL CHECK (height > 0),
+  unit TEXT NOT NULL CHECK (unit IN ('px', 'mm')),
+  visible_width DOUBLE PRECISION CHECK (visible_width > 0),
+  visible_height DOUBLE PRECISION CHECK (visible_height > 0),
+  deadline DATE,
+  requirements JSONB NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(requirements) = 'object'),
+  file_types JSONB NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(file_types) = 'array'),
+  source_evidence JSONB,
+  notes TEXT NOT NULL DEFAULT '',
+  metadata TEXT,
+  CHECK (source_evidence IS NULL OR jsonb_typeof(source_evidence) = 'object'),
+  CHECK (
+    (trust = 'verified' AND brain_spec_id IS NOT NULL AND source_evidence IS NOT NULL)
+    OR (trust = 'user-provided' AND brain_spec_id IS NULL AND source_evidence IS NULL)
+  )
+);
+
+CREATE TABLE briefd_share_tokens (
+  id UUID PRIMARY KEY,
+  campaign_id UUID NOT NULL REFERENCES briefd_campaigns(id) ON DELETE CASCADE,
+  token_hash CHAR(64) NOT NULL UNIQUE CHECK (token_hash ~ '^[0-9a-f]{64}$'),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at TIMESTAMPTZ,
+  revoked_at TIMESTAMPTZ,
+  CHECK (expires_at IS NULL OR expires_at > created_at)
+);
+
+CREATE INDEX briefd_campaign_rows_campaign_idx ON briefd_campaign_rows(campaign_id);
+CREATE INDEX briefd_share_tokens_campaign_idx ON briefd_share_tokens(campaign_id);
+"""
+abort = """
+DROP TABLE IF EXISTS briefd_share_tokens;
+DROP TABLE IF EXISTS briefd_resolved_formats;
+DROP TABLE IF EXISTS briefd_campaign_rows;
+DROP TABLE IF EXISTS briefd_campaigns;
+"""

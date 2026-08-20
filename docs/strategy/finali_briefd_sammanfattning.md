@@ -1,5 +1,7 @@
 # Finali AI & Briefd — Sammanfattning för kompanjon
 
+> **Vision — inte produktspecifikation.** Funktionerna nedan beskriver målbilden och ska inte läsas som levererade egenskaper. Se `docs/briefd-release-contract.md` för verifierad nulägesgräns.
+
 ---
 
 ## Vad vi bygger

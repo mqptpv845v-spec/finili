@@ -1,0 +1,54 @@
+[[actions]]
+type = "custom"
+complete = """
+WITH campaigns_needing_row_order AS (
+  SELECT campaign_id
+    FROM briefd_campaign_rows
+   GROUP BY campaign_id
+  HAVING COUNT(*) > 1
+     AND BOOL_AND(sort_order = 0)
+),
+ranked_rows AS (
+  SELECT campaign_row.id,
+         ROW_NUMBER() OVER (
+           PARTITION BY campaign_row.campaign_id
+           ORDER BY campaign_row.row_number, campaign_row.id
+         ) - 1 AS next_sort_order
+    FROM briefd_campaign_rows AS campaign_row
+    JOIN campaigns_needing_row_order AS pending_campaign
+      ON pending_campaign.campaign_id = campaign_row.campaign_id
+)
+UPDATE briefd_campaign_rows AS campaign_row
+   SET sort_order = ranked_rows.next_sort_order
+  FROM ranked_rows
+ WHERE campaign_row.id = ranked_rows.id;
+
+WITH campaigns_needing_format_order AS (
+  SELECT campaign_row.campaign_id
+    FROM briefd_resolved_formats AS resolved_format
+    JOIN briefd_campaign_rows AS campaign_row
+      ON campaign_row.id = resolved_format.campaign_row_id
+   GROUP BY campaign_row.campaign_id
+  HAVING COUNT(*) > 1
+     AND BOOL_AND(resolved_format.sort_order = 0)
+),
+ranked_formats AS (
+  SELECT resolved_format.id,
+         ROW_NUMBER() OVER (
+           PARTITION BY campaign_row.campaign_id
+           ORDER BY campaign_row.row_number, campaign_row.id
+         ) - 1 AS next_sort_order
+    FROM briefd_resolved_formats AS resolved_format
+    JOIN briefd_campaign_rows AS campaign_row
+      ON campaign_row.id = resolved_format.campaign_row_id
+    JOIN campaigns_needing_format_order AS pending_campaign
+      ON pending_campaign.campaign_id = campaign_row.campaign_id
+)
+UPDATE briefd_resolved_formats AS resolved_format
+   SET sort_order = ranked_formats.next_sort_order
+  FROM ranked_formats
+ WHERE resolved_format.id = ranked_formats.id;
+
+CREATE UNIQUE INDEX IF NOT EXISTS briefd_campaign_rows_order_unique
+    ON briefd_campaign_rows (campaign_id, sort_order);
+"""

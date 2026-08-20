@@ -30,16 +30,35 @@ interface ModalProps {
 
 export function Modal({ isOpen, onClose, variant = "light", label, children }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
+    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     panelRef.current?.focus();
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      if (e.key !== "Tab" || !panelRef.current) return;
+      const focusable = Array.from(panelRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ));
+      if (focusable.length === 0) { e.preventDefault(); panelRef.current.focus(); return; }
+      const first = focusable[0];
+      const last = focusable.at(-1) ?? first;
+      const activeElement = document.activeElement;
+      if (!focusable.includes(activeElement as HTMLElement)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      }
+      else if (e.shiftKey && activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     };
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocusRef.current?.focus();
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -59,8 +78,10 @@ export function Modal({ isOpen, onClose, variant = "light", label, children }: M
         className={`relative w-full outline-none ${PANEL_CLASSES[variant]}`}
       >
         <button
+          type="button"
           onClick={onClose}
           title="Close"
+          aria-label="Close dialog"
           className={`absolute top-5 right-5 p-1.5 transition-colors cursor-pointer ${CLOSE_CLASSES[variant]}`}
         >
           <X className="w-4 h-4" />

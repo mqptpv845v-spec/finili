@@ -1,0 +1,4 @@
+[[actions]]
+type = "custom"
+start = "SELECT 1;"
+abort = "SELECT 1;"

@@ -1,5 +1,7 @@
 # Deep Research: Marknadsanalys för Finali AI & Briefd
 
+> **Vision och research — inte produktspecifikation.** Påståenden i detta dokument beskriver hypoteser, marknadsanalys och önskad produkt. De bevisar inte vad som är implementerat. Se `docs/briefd-release-contract.md` för verifierad nulägesgräns.
+
 Sammanfattning av två oberoende marknads- och teknikanalyser.
 Båda rapporterna bekräftar samma grundläggande bild — de kompletterar snarare än motsäger varandra.
 

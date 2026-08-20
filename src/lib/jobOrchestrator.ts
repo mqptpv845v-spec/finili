@@ -1,159 +1,453 @@
+import { createHash } from "node:crypto";
 import ExcelJS from "exceljs";
-import brainData from "./data/brain.json";
+import { mediaSpecs, type MediaSpec } from "./briefd/brain";
 
-export interface MediaSpec {
-    id: string;
-    name: string;
-    publisher: string;
-    category: string;
-    category_tag: string;
-    dimensions: {
-        width_mm?: number;
-        height_mm?: number;
-        width_px?: number;
-        height_px?: number;
-    };
-    bleed_mm: number;
-    safe_zones: {
-        text_mm: number;
-        image_mm: number;
-    };
-    color: {
-        icc_profile: string;
-        pdf_preset: string;
-        transparency_flattener: string;
-    };
-    naming_convention: string;
+export type { MediaSpec } from "./briefd/brain";
+
+export type MediaPlanField = "campaign" | "publisher" | "format" | "deadline" | "notes";
+export type MediaPlanColumnMapping = Partial<Record<MediaPlanField, number>>;
+
+export interface MediaPlanColumn {
+    index: number;
+    label: string;
+}
+
+export interface MediaPlanSource {
+    sheetName: string;
+    rowNumber: number;
 }
 
 export interface MediaPlanRow {
-    Campaign: string;
-    Publisher: string;
-    Format: string;
-    Deadline?: string;
-    Notes?: string;
+    id: string;
+    source: MediaPlanSource;
+    campaign: string;
+    publisher: string;
+    format: string;
+    deadline: string | null;
+    deadlineRaw: string;
+    notes: string;
+    rawValues: Record<string, string>;
+}
+
+export interface ParsedMediaPlan {
+    sheetName: string;
+    availableSheets: string[];
+    headerRow: number;
+    columns: MediaPlanColumn[];
+    mapping: MediaPlanColumnMapping;
+    rows: MediaPlanRow[];
+    warnings: string[];
+}
+
+export interface ParseMediaPlanOptions {
+    sheetName?: string;
+    headerRow?: number;
+    mapping?: MediaPlanColumnMapping;
 }
 
 export interface OrchestratedJob {
+    id: string;
+    source: MediaPlanSource;
     campaign: string;
     publisher: string;
     formatName: string;
-    deadline: string;
+    deadline: string | null;
+    deadlineRaw: string;
     specs: MediaSpec | null;
+    matchConfidence: "canonical" | "alias" | null;
     generatedFileName: string;
     status: "pending" | "error" | "complete";
     error?: string;
     outputUrl?: string;
 }
 
-const mediaSpecs: MediaSpec[] = brainData.media_specs;
+const HEADER_SCAN_LIMIT = 30;
 
-export async function parseExcelBuffer(buffer: Buffer): Promise<MediaPlanRow[]> {
+const HEADER_ALIASES: Record<MediaPlanField, string[]> = {
+    campaign: ["campaign", "kampanj", "kampanjtext", "headline", "copy", "kund", "client"],
+    publisher: ["publisher", "mediehus", "media", "publisher name", "publicist", "kanal", "leverantör"],
+    format: ["format", "size", "dimensioner", "typ", "annonsformat", "formatnamn", "placering"],
+    deadline: ["deadline", "materialdag", "materialdeadline", "datum", "due", "inlämning", "materialdatum"],
+    notes: ["notes", "noteringar", "kommentarer", "kommentar", "övrigt", "information"],
+};
+
+function normalize(value: string): string {
+    return value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+}
+
+const NORMALIZED_HEADER_ALIASES = Object.fromEntries(
+    Object.entries(HEADER_ALIASES).map(([field, aliases]) => [
+        field,
+        new Set(aliases.map(normalize)),
+    ]),
+) as Record<MediaPlanField, Set<string>>;
+
+function fieldForHeader(value: string): MediaPlanField | null {
+    const normalized = normalize(value);
+    for (const field of Object.keys(NORMALIZED_HEADER_ALIASES) as MediaPlanField[]) {
+        if (NORMALIZED_HEADER_ALIASES[field].has(normalized)) return field;
+    }
+    return null;
+}
+
+function cellText(cell: ExcelJS.Cell): string {
+    return String(cell.text ?? "").replace(/\s+/g, " ").trim();
+}
+
+function mappingForRow(row: ExcelJS.Row): MediaPlanColumnMapping {
+    const mapping: MediaPlanColumnMapping = {};
+    row.eachCell({ includeEmpty: false }, (cell, columnNumber) => {
+        const field = fieldForHeader(cellText(cell));
+        if (field && mapping[field] == null) mapping[field] = columnNumber;
+    });
+    return mapping;
+}
+
+function mappingScore(mapping: MediaPlanColumnMapping): number {
+    let score = Object.keys(mapping).length;
+    if (mapping.publisher != null) score += 3;
+    if (mapping.format != null) score += 3;
+    if (mapping.deadline != null) score += 1;
+    return score;
+}
+
+function detectSheetAndHeader(workbook: ExcelJS.Workbook): {
+    worksheet: ExcelJS.Worksheet;
+    headerRow: number;
+    mapping: MediaPlanColumnMapping;
+} {
+    let best: {
+        worksheet: ExcelJS.Worksheet;
+        headerRow: number;
+        mapping: MediaPlanColumnMapping;
+        score: number;
+    } | null = null;
+
+    for (const worksheet of workbook.worksheets) {
+        const finalRow = Math.min(worksheet.actualRowCount || worksheet.rowCount, HEADER_SCAN_LIMIT);
+        for (let rowNumber = 1; rowNumber <= finalRow; rowNumber += 1) {
+            const mapping = mappingForRow(worksheet.getRow(rowNumber));
+            const score = mappingScore(mapping);
+            if (!best || score > best.score) {
+                best = { worksheet, headerRow: rowNumber, mapping, score };
+            }
+        }
+    }
+
+    if (!best) throw new Error("No non-empty worksheet rows were found in the workbook.");
+
+    return best;
+}
+
+function detectHeaderInWorksheet(worksheet: ExcelJS.Worksheet): { headerRow: number; mapping: MediaPlanColumnMapping } {
+    let best: { headerRow: number; mapping: MediaPlanColumnMapping; score: number } | null = null;
+    const finalRow = Math.min(worksheet.actualRowCount || worksheet.rowCount, HEADER_SCAN_LIMIT);
+    for (let rowNumber = 1; rowNumber <= finalRow; rowNumber += 1) {
+        const mapping = mappingForRow(worksheet.getRow(rowNumber));
+        const score = mappingScore(mapping);
+        if (!best || score > best.score) best = { headerRow: rowNumber, mapping, score };
+    }
+    if (!best) throw new Error(`No non-empty rows were found in worksheet ${worksheet.name}.`);
+    return best;
+}
+
+function getWorksheet(workbook: ExcelJS.Workbook, sheetName: string): ExcelJS.Worksheet {
+    const worksheet = workbook.getWorksheet(sheetName);
+    if (!worksheet) throw new Error(`Worksheet not found: ${sheetName}`);
+    return worksheet;
+}
+
+function validateHeaderRow(worksheet: ExcelJS.Worksheet, headerRow: number): void {
+    if (!Number.isInteger(headerRow) || headerRow < 1 || headerRow > worksheet.rowCount) {
+        throw new Error(`Header row ${headerRow} is outside worksheet ${worksheet.name}.`);
+    }
+}
+
+function columnsForRow(row: ExcelJS.Row): MediaPlanColumn[] {
+    const columns: MediaPlanColumn[] = [];
+    row.eachCell({ includeEmpty: false }, (cell, index) => {
+        columns.push({ index, label: cellText(cell) || `Column ${index}` });
+    });
+    return columns;
+}
+
+function isValidDate(date: Date): boolean {
+    return !Number.isNaN(date.getTime());
+}
+
+function exactDate(year: number, month: number, day: number): Date | null {
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return isValidDate(date) && date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
+        ? date
+        : null;
+}
+
+function toIsoDate(date: Date): string {
+    const year = date.getUTCFullYear();
+    const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(date.getUTCDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+function toExcelCalendarDate(date: Date): string {
+    const isUtcMidnight = date.getUTCHours() === 0 && date.getUTCMinutes() === 0 && date.getUTCSeconds() === 0 && date.getUTCMilliseconds() === 0;
+    if (isUtcMidnight) return toIsoDate(date);
+    const isLocalMidnight = date.getHours() === 0 && date.getMinutes() === 0 && date.getSeconds() === 0 && date.getMilliseconds() === 0;
+    if (isLocalMidnight) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+    return toIsoDate(date);
+}
+
+function parseStringDate(value: string): string | null {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+
+    const isoMatch = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (isoMatch) {
+        const date = exactDate(Number(isoMatch[1]), Number(isoMatch[2]), Number(isoMatch[3]));
+        return date ? toIsoDate(date) : null;
+    }
+
+    const numericMatch = trimmed.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+    if (numericMatch) {
+        const date = exactDate(Number(numericMatch[3]), Number(numericMatch[2]), Number(numericMatch[1]));
+        return date ? toIsoDate(date) : null;
+    }
+
+    const monthNames: Record<string, number> = {
+        jan: 1, january: 1, januari: 1,
+        feb: 2, february: 2, februari: 2,
+        mar: 3, march: 3, mars: 3,
+        apr: 4, april: 4,
+        may: 5, maj: 5,
+        jun: 6, june: 6, juni: 6,
+        jul: 7, july: 7, juli: 7,
+        aug: 8, august: 8,
+        sep: 9, sept: 9, september: 9,
+        oct: 10, october: 10, okt: 10, oktober: 10,
+        nov: 11, november: 11,
+        dec: 12, december: 12,
+    };
+    const namedMatch = normalize(trimmed).match(/^(\d{1,2}) ([a-z]+) (\d{4})$/);
+    if (namedMatch) {
+        const month = monthNames[namedMatch[2]];
+        const date = month ? exactDate(Number(namedMatch[3]), month, Number(namedMatch[1])) : null;
+        return date ? toIsoDate(date) : null;
+    }
+    return null;
+}
+
+function deadlineValue(cell: ExcelJS.Cell | undefined): { iso: string | null; raw: string } {
+    if (!cell) return { iso: null, raw: "" };
+    const value = cell.value;
+    if (value instanceof Date) {
+        const iso = toExcelCalendarDate(value);
+        return { iso, raw: iso };
+    }
+
+    if (value && typeof value === "object" && "result" in value) {
+        const result = value.result;
+        if (result instanceof Date) {
+            const iso = toExcelCalendarDate(result);
+            return { iso, raw: iso };
+        }
+    }
+
+    const raw = cellText(cell);
+    return { iso: parseStringDate(raw), raw };
+}
+
+function mappedCellText(row: ExcelJS.Row, mapping: MediaPlanColumnMapping, field: MediaPlanField): string {
+    const column = mapping[field];
+    return column == null ? "" : cellText(row.getCell(column));
+}
+
+function stableRowId(sheetName: string, rowNumber: number, rawValues: Record<string, string>): string {
+    const digest = createHash("sha256")
+        .update(JSON.stringify([sheetName, rowNumber, rawValues]))
+        .digest("hex")
+        .slice(0, 12);
+    return `row-${rowNumber}-${digest}`;
+}
+
+export async function parseExcelBuffer(
+    buffer: Buffer,
+    options: ParseMediaPlanOptions = {},
+): Promise<ParsedMediaPlan> {
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(buffer as unknown as ArrayBuffer);
 
-    const worksheet = workbook.worksheets[0];
-    if (!worksheet) {
+    if (workbook.worksheets.length === 0) {
         throw new Error("The uploaded file contains no worksheets.");
     }
 
-    // Header row -> column index lookup, case-insensitive
-    const headerByColumn = new Map<number, string>();
-    worksheet.getRow(1).eachCell((cell, colNumber) => {
-        headerByColumn.set(colNumber, String(cell.value ?? "").trim());
-    });
+    const explicitlySelectedWorksheet = options.sheetName
+        ? getWorksheet(workbook, options.sheetName)
+        : workbook.worksheets[0];
+    const detected = options.headerRow != null && options.mapping
+        ? null
+        : options.sheetName
+            ? { worksheet: explicitlySelectedWorksheet, ...detectHeaderInWorksheet(explicitlySelectedWorksheet) }
+            : detectSheetAndHeader(workbook);
+    const worksheet = options.sheetName
+        ? explicitlySelectedWorksheet
+        : detected?.worksheet ?? explicitlySelectedWorksheet;
+    const headerRow = options.headerRow ?? (worksheet === detected?.worksheet ? detected.headerRow : 1);
+    validateHeaderRow(worksheet, headerRow);
+
+    const detectedMapping = mappingForRow(worksheet.getRow(headerRow));
+    const mapping = options.mapping ? { ...options.mapping } : detectedMapping;
+    const columns = columnsForRow(worksheet.getRow(headerRow));
+    const warnings: string[] = [];
+
+    if (!options.mapping && mappingScore(detectedMapping) === 0) {
+        warnings.push("No standard header names were recognized. Choose the header row and map the columns manually.");
+    }
+    if (mapping.publisher == null) warnings.push("Publisher column needs to be mapped.");
+    if (mapping.format == null) warnings.push("Format column needs to be mapped.");
+    if (mapping.deadline == null) warnings.push("Deadline column was not detected.");
 
     const rows: MediaPlanRow[] = [];
-    worksheet.eachRow((row, rowNumber) => {
-        if (rowNumber === 1) return;
+    worksheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+        if (rowNumber <= headerRow) return;
 
-        const values: Record<string, string> = {};
-        row.eachCell((cell, colNumber) => {
-            const header = headerByColumn.get(colNumber);
-            if (header) values[header.toLowerCase()] = String(cell.text ?? "").trim();
+        const rawValues: Record<string, string> = {};
+        columns.forEach((column) => {
+            rawValues[String(column.index)] = cellText(row.getCell(column.index));
         });
 
-        const findColumn = (candidates: string[]): string | null => {
-            for (const candidate of candidates) {
-                const value = values[candidate.toLowerCase()];
-                if (value) return value;
-            }
-            return null;
-        };
+        const campaign = mappedCellText(row, mapping, "campaign");
+        const publisher = mappedCellText(row, mapping, "publisher");
+        const format = mappedCellText(row, mapping, "format");
+        const notes = mappedCellText(row, mapping, "notes");
+        const deadlineColumn = mapping.deadline;
+        const deadline = deadlineValue(deadlineColumn == null ? undefined : row.getCell(deadlineColumn));
 
-        const parsed: MediaPlanRow = {
-            Campaign: findColumn(["Campaign", "Kampanj", "Kampanjtext", "Headline", "Copy"]) || "Finali_Launch",
-            Publisher: findColumn(["Publisher", "Mediehus", "Media", "Publisher Name", "Publicist"]) || "Unknown",
-            Format: findColumn(["Format", "Size", "Dimensioner", "Typ"]) || "Unknown",
-            Deadline: findColumn(["Deadline", "Materialdag", "Materialdeadline", "Datum", "Due"]) || "",
-            Notes: findColumn(["Notes", "Noteringar", "Kommentarer"]) || "",
-        };
+        if (!campaign && !publisher && !format && !deadline.raw && !notes) return;
 
-        // Skip fully empty rows
-        if (parsed.Publisher !== "Unknown" || parsed.Format !== "Unknown") {
-            rows.push(parsed);
-        }
+        rows.push({
+            id: stableRowId(worksheet.name, rowNumber, rawValues),
+            source: { sheetName: worksheet.name, rowNumber },
+            campaign,
+            publisher,
+            format,
+            deadline: deadline.iso,
+            deadlineRaw: deadline.raw,
+            notes,
+            rawValues,
+        });
     });
 
-    return rows;
+    return {
+        sheetName: worksheet.name,
+        availableSheets: workbook.worksheets.map((sheet) => sheet.name),
+        headerRow,
+        columns,
+        mapping,
+        rows,
+        warnings,
+    };
 }
 
-function normalize(value: string): string {
-    return value.toLowerCase().replace(/\s+/g, " ").trim();
+function normalizedOptions(primary: string, aliases: string[]): Set<string> {
+    return new Set([primary, ...aliases].map(normalize));
 }
 
-function findSpec(row: MediaPlanRow): MediaSpec | undefined {
-    const publisher = normalize(row.Publisher);
-    const format = normalize(row.Format);
-
-    const forPublisher = mediaSpecs.filter(spec => normalize(spec.publisher) === publisher);
-
-    // Prefer an exact format-name match, fall back to a substring match —
-    // but only when the query is long enough to be meaningful.
-    return (
-        forPublisher.find(spec => normalize(spec.name) === format) ??
-        forPublisher.find(spec => format.length >= 4 && normalize(spec.name).includes(format))
+function findSpec(row: MediaPlanRow): { spec: MediaSpec; confidence: "canonical" | "alias" } | null {
+    const publisher = normalize(row.publisher);
+    const format = normalize(row.format);
+    const forPublisher = mediaSpecs.filter((spec) =>
+        normalizedOptions(spec.publisher, spec.publisher_aliases).has(publisher),
     );
+    const canonical = forPublisher.find((spec) => normalize(spec.name) === format);
+    if (canonical) return { spec: canonical, confidence: "canonical" };
+    const alias = forPublisher.find((spec) => normalizedOptions(spec.name, spec.aliases).has(format));
+    return alias ? { spec: alias, confidence: "alias" } : null;
+}
+
+function safeFileToken(value: string): string {
+    return value
+        .normalize("NFKD")
+        .replace(/[\\/]/g, "-")
+        .replace(/\.\.+/g, ".")
+        .replace(/[^a-zA-Z0-9._-]+/g, "_")
+        .replace(/^\.+/, "")
+        .replace(/_+/g, "_")
+        .slice(0, 120) || "untitled";
 }
 
 function fillNamingConvention(template: string, tokens: Record<string, string>): string {
     let result = template;
     for (const [token, value] of Object.entries(tokens)) {
-        result = result.replaceAll(`{{${token}}}`, value);
+        result = result.replaceAll(`{{${token}}}`, safeFileToken(value));
     }
-    return result;
+    return result.replace(/\s+/g, "_");
 }
 
 export function matchToBrain(row: MediaPlanRow): OrchestratedJob {
     const match = findSpec(row);
 
-    if (!match) {
+    if (!row.publisher || !row.format) {
+        const missing = [!row.publisher ? "publisher" : null, !row.format ? "format" : null]
+            .filter(Boolean)
+            .join(" and ");
         return {
-            campaign: row.Campaign,
-            publisher: row.Publisher,
-            formatName: row.Format,
-            deadline: row.Deadline || "",
+            id: row.id,
+            source: row.source,
+            campaign: row.campaign,
+            publisher: row.publisher,
+            formatName: row.format,
+            deadline: row.deadline,
+            deadlineRaw: row.deadlineRaw,
             specs: null,
+            matchConfidence: null,
             generatedFileName: "",
             status: "error",
-            error: `No matching spec found in The Brain for: ${row.Publisher} - ${row.Format}`,
+            error: `Missing ${missing} on row ${row.source.rowNumber}.`,
+        };
+    }
+
+    if (!match) {
+        return {
+            id: row.id,
+            source: row.source,
+            campaign: row.campaign,
+            publisher: row.publisher,
+            formatName: row.format,
+            deadline: row.deadline,
+            deadlineRaw: row.deadlineRaw,
+            specs: null,
+            matchConfidence: null,
+            generatedFileName: "",
+            status: "error",
+            error: `No matching spec found in The Brain for: ${row.publisher} - ${row.format}`,
         };
     }
 
     const dateStr = new Date().toISOString().split("T")[0];
-    const fileName = fillNamingConvention(match.naming_convention, {
-        Campaign: row.Campaign,
-        Publisher: row.Publisher,
-        Format: match.name,
+    const fileName = fillNamingConvention(match.spec.naming_convention, {
+        Campaign: row.campaign || "Campaign",
+        Publisher: row.publisher,
+        Format: match.spec.name,
         Date: dateStr,
-    }).replace(/\s+/g, "_");
+    });
 
     return {
-        campaign: row.Campaign,
-        publisher: row.Publisher,
-        formatName: match.name,
-        deadline: row.Deadline || "",
-        specs: match,
+        id: row.id,
+        source: row.source,
+        campaign: row.campaign,
+        publisher: row.publisher,
+        formatName: match.spec.name,
+        deadline: row.deadline,
+        deadlineRaw: row.deadlineRaw,
+        specs: match.spec,
+        matchConfidence: match.confidence,
         generatedFileName: fileName,
         status: "pending",
     };
