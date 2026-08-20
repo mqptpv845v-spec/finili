@@ -49,6 +49,7 @@ next-env.d.ts
 *.idml
 *.pdf
 *.xlsx
+!samples/briefd-test-plan.xlsx
 *.fig
 *.sketch
 *.numbers
