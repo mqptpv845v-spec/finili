@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { assertCampaignSnapshot, type CampaignSnapshot } from "./contracts";
-import { requestHasSameOrigin } from "./security";
+import { requestHasSameOrigin, requestUsesHttps } from "./security";
 import {
   PersistenceError,
   type CampaignDraft,
@@ -210,7 +210,7 @@ export function setOwnerCookie(response: NextResponse, request: Request, campaig
   response.cookies.set(ownerCookieName(campaignId), secret, {
     httpOnly: true,
     sameSite: "strict",
-    secure: new URL(request.url).protocol === "https:",
+    secure: requestUsesHttps(request),
     path: "/",
     maxAge: OWNER_COOKIE_MAX_AGE_SECONDS,
   });
@@ -220,7 +220,7 @@ export function clearOwnerCookie(response: NextResponse, request: Request, campa
   response.cookies.set(ownerCookieName(campaignId), "", {
     httpOnly: true,
     sameSite: "strict",
-    secure: new URL(request.url).protocol === "https:",
+    secure: requestUsesHttps(request),
     path: "/",
     maxAge: 0,
     expires: new Date(0),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { assertCampaignSnapshot, sharedCampaign, unresolvedRowIds, type CampaignSnapshot } from "./contracts";
-import { capabilityMatches, createCapabilitySecret, hashCapabilitySecret, requestHasSameOrigin } from "./security";
+import { capabilityMatches, createCapabilitySecret, hashCapabilitySecret, requestHasSameOrigin, requestUsesHttps } from "./security";
 
 const snapshot: CampaignSnapshot = {
   id: "campaign-1", revision: 1, clientName: "Client", campaignName: "Launch",
@@ -21,6 +21,21 @@ describe("Briefd persistence security", () => {
   it("enforces same-origin mutation requests", () => {
     expect(requestHasSameOrigin(new Request("https://briefd.test/api", { headers: { origin: "https://briefd.test" } }))).toBe(true);
     expect(requestHasSameOrigin(new Request("https://briefd.test/api", { headers: { origin: "https://evil.test" } }))).toBe(false);
+  });
+
+  it("uses a reverse proxy's public origin without trusting a foreign browser origin", () => {
+    const proxyHeaders = {
+      host: "service.internal:3000",
+      "x-forwarded-host": "briefd.example",
+      "x-forwarded-proto": "https",
+    };
+    expect(requestHasSameOrigin(new Request("http://service.internal:3000/api", {
+      headers: { ...proxyHeaders, origin: "https://briefd.example" },
+    }))).toBe(true);
+    expect(requestHasSameOrigin(new Request("http://service.internal:3000/api", {
+      headers: { ...proxyHeaders, origin: "https://evil.test" },
+    }))).toBe(false);
+    expect(requestUsesHttps(new Request("http://service.internal:3000/api", { headers: proxyHeaders }))).toBe(true);
   });
 
   it("redacts import data from view-only campaign responses", () => {

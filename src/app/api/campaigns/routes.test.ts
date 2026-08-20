@@ -127,6 +127,19 @@ describe("Briefd campaign API routes", () => {
     expect(cookie).not.toContain("Secure");
   });
 
+  it("accepts Specific-style proxy origins and secures the owner cookie", async () => {
+    const response = await createCampaign(jsonRequest("/api/campaigns", "POST", draft, {
+      host: "service.internal:3000",
+      origin: "https://briefd.example",
+      "x-forwarded-host": "briefd.example",
+      "x-forwarded-proto": "https",
+    }));
+
+    expect(response.status).toBe(201);
+    expect(response.headers.get("set-cookie")).toContain("Secure");
+    expect(service.createCampaign).toHaveBeenCalledWith(draft);
+  });
+
   it("rejects cross-origin and oversized mutations before calling the service", async () => {
     const foreign = await createCampaign(jsonRequest("/api/campaigns", "POST", draft, { origin: "https://attacker.invalid" }));
     expect(foreign.status).toBe(403);
