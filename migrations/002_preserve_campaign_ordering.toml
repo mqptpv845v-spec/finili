@@ -25,3 +25,11 @@ table = "briefd_resolved_formats"
     [actions.column]
     name = "deadline_raw"
     type = "TEXT"
+
+[[actions]]
+type = "alter_column"
+table = "briefd_resolved_formats"
+column = "notes"
+
+    [actions.changes]
+    nullable = true

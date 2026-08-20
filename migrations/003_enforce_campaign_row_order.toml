@@ -1,0 +1,8 @@
+[[actions]]
+type = "add_index"
+table = "briefd_campaign_rows"
+
+    [actions.index]
+    name = "briefd_campaign_rows_order_unique"
+    columns = ["campaign_id", "sort_order"]
+    unique = true
