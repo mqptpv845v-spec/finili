@@ -176,6 +176,36 @@ describe("Briefd campaign API routes", () => {
     expect(service.createCampaign).not.toHaveBeenCalled();
   });
 
+  it("rejects malformed optional manual-format fields before persistence", async () => {
+    const manualFormat = {
+      categoryTag: "Display",
+      publisher: "Publisher",
+      formatName: "Format",
+      sectionCategory: "Digital Display & High-Impact",
+      dimensions: { width: 300, height: 250, unit: "px" },
+      deadline: null,
+      requirements: {},
+      fileTypes: ["jpg"],
+    };
+    const malformedFormats = [
+      { ...manualFormat, deadlineRaw: { raw: "tomorrow" } },
+      { ...manualFormat, notes: ["internal"] },
+      { ...manualFormat, metadata: { wave: 1 } },
+      { ...manualFormat, dimensions: { ...manualFormat.dimensions, visibleWidth: -1 } },
+      { ...manualFormat, dimensions: { ...manualFormat.dimensions, visibleHeight: "200" } },
+    ];
+
+    for (const format of malformedFormats) {
+      const response = await createCampaign(jsonRequest("/api/campaigns", "POST", {
+        ...draft,
+        resolutions: [{ rowId: row.id, kind: "manual", format }],
+      }));
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toEqual({ error: "Campaign payload is invalid." });
+    }
+    expect(service.createCampaign).not.toHaveBeenCalled();
+  });
+
   it("loads an owner campaign only when its per-campaign cookie is present", async () => {
     const response = await getCampaign(ownerRequest(`/api/campaigns/${CAMPAIGN_ID}`, "GET"), context({ id: CAMPAIGN_ID }));
     expect(response.status).toBe(200);

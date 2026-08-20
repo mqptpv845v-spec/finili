@@ -56,10 +56,19 @@ function assertResolutionInput(value: unknown): asserts value is ResolutionInput
   ]);
   if (!isRecord(value.format.dimensions) || !isRecord(value.format.requirements)) throw new Error("Invalid format.");
   assertAllowedKeys(value.format.dimensions, ["width", "height", "unit", "visibleWidth", "visibleHeight"]);
+  for (const key of ["visibleWidth", "visibleHeight"] as const) {
+    const dimension = value.format.dimensions[key];
+    if (dimension !== undefined && (typeof dimension !== "number" || !Number.isFinite(dimension) || dimension <= 0)) {
+      throw new Error("Invalid visible dimension.");
+    }
+  }
   assertAllowedKeys(value.format.requirements, [
     "bleedMm", "textSafeMm", "imageSafeMm", "maxFileSizeKb", "resolutionDpi",
     "durationSeconds", "colorProfile",
   ]);
+  assertOptionalString(value.format.deadlineRaw);
+  assertOptionalString(value.format.notes);
+  assertOptionalString(value.format.metadata);
 }
 
 function campaignWrite(value: unknown, update: boolean): CampaignDraft | CampaignUpdate {
