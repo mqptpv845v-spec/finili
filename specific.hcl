@@ -21,10 +21,18 @@ service "web" {
   }
 
   env = {
-    PORT = port
+    PORT         = port
+    DATABASE_URL = postgres.main.url
   }
 
   dev {
     command = "npm run dev"
+  }
+}
+
+postgres "main" {
+  reshape {
+    enabled        = true
+    migrations_dir = "migrations"
   }
 }
