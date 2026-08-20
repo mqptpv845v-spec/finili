@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronRight, RotateCcw } from "lucide-react";
+import { ChevronDown, ChevronRight, FileUp, RotateCcw } from "lucide-react";
 import type { FormatData } from "@/lib/briefd/types";
 import { CATEGORIES, CATEGORY_ORDER } from "@/lib/briefd/categories";
 import { GeometricGlyph } from "@/components/atoms/GeometricGlyph";
@@ -13,7 +13,8 @@ interface BriefdSidebarProps {
   onSelectTab: (tab: "formats" | "calendar" | "table") => void;
   onSelectFormat: (formatId: string | null) => void;
   onSelectCategory: (categoryId: string) => void;
-  onResetPlan: () => void;
+  onReplacePlan?: () => void;
+  onResetPlan?: () => void;
   clientName: string;
   campaignName: string;
 }
@@ -31,6 +32,7 @@ export function BriefdSidebar({
   onSelectTab,
   onSelectFormat,
   onSelectCategory,
+  onReplacePlan,
   onResetPlan,
   clientName,
   campaignName,
@@ -154,15 +156,28 @@ export function BriefdSidebar({
 
       {/* 3. Pinned Bottom Footer (No harsh border line, clean button) */}
       <div className="shrink-0 pt-3 pb-2 bg-white flex flex-col gap-1.5">
-        <Button
-          variant="soft"
-          size="sm"
-          onClick={onResetPlan}
-          className="w-full"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Upload new spreadsheet</span>
-        </Button>
+        {onReplacePlan && (
+          <Button
+            variant="soft"
+            size="sm"
+            onClick={onReplacePlan}
+            className="w-full"
+          >
+            <FileUp className="w-3.5 h-3.5" />
+            <span>Update from spreadsheet</span>
+          </Button>
+        )}
+        {onResetPlan && (
+          <Button
+            variant={onReplacePlan ? "outline" : "soft"}
+            size="sm"
+            onClick={onResetPlan}
+            className="w-full"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            <span>Start a new import</span>
+          </Button>
+        )}
 
         <div className="flex items-center justify-center gap-1.5 text-label text-black/60 text-center pt-0.5">
           <span className="w-1.5 h-1.5 rounded-full bg-petrol shrink-0" />
