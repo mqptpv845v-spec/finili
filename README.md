@@ -13,19 +13,16 @@ Read [docs/product.md](docs/product.md) for the full product thinking, and [docs
 
 ## Getting started
 
-Requirements: Node 20+, npm. Infrastructure is defined with [Specific](https://specific.dev) in `specific.hcl`.
+Requirements: Node 20+, npm, and [Specific](https://specific.dev). The complete Briefd workflow requires the Postgres environment defined in `specific.hcl`.
 
 ```bash
 npm install
 
-# Preferred: full local environment via Specific
+# Start the web app, Postgres, and migrations
 specific dev
-
-# Plain Next.js dev server also works
-npm run dev
 ```
 
-Open http://127.0.0.1:3000 — the marketing page is at `/`, the Briefd app at `/briefd`.
+Open the web-service URL printed by Specific (normally `http://localhost:3001`) — the marketing page is at `/`, the Briefd app at `/briefd`. Plain `npm run dev` can render the UI and parser, but cannot save or share campaigns unless `DATABASE_URL` points to a migrated Postgres database.
 
 ### The Finali AI prototype (macOS only)
 
