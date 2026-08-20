@@ -1,66 +1,76 @@
 # Architecture
 
+## Status boundary
+
+Briefd is a local-first, correctable media-plan utility. Its parser, sourced provisional Brain, correction workflow, and three workspace views are implemented. PostgreSQL schema and persistence domain contracts exist, but durable runtime routes and revocable sharing are not considered shipped until the Specific-backed flow passes reload, authorization, and two-browser revocation checks.
+
+Finali AI is separate. `/api/orchestrate` is a macOS-only prototype that drives a locally installed Adobe InDesign; it is not a hosted or validated production engine.
+
 ## Stack
 
-Next.js 16 (App Router, Turbopack) · React 19 · TypeScript (strict) · Tailwind CSS v4 (`@theme` tokens, no config file) · Vitest · ESLint 9 flat config. Infrastructure via [Specific](https://specific.dev) (`specific.hcl`). Path alias `@/* → ./src/*`.
+Next.js 16 App Router, React 19, strict TypeScript, Tailwind CSS v4, ExcelJS, Vitest, ESLint, and Specific. `specific.hcl` defines the web service and local PostgreSQL database with Reshape migrations.
 
 ## Routes
 
-| Route | File | What it is |
+| Route | Status | Purpose |
 |---|---|---|
-| `/` | `src/app/page.tsx` | Marketing landing page (server component) |
-| `/briefd` | `src/app/briefd/page.tsx` | The Briefd app (client component) |
-| `POST /api/parse` | `src/app/api/parse/route.ts` | Parse an uploaded `.xlsx` media plan and match rows against The Brain |
-| `POST /api/orchestrate` | `src/app/api/orchestrate/route.ts` | Full local InDesign pipeline (macOS only, see below) |
+| `/` | Implemented | Marketing and honest product-status page |
+| `/briefd` | Implemented | Upload, import review, correction, and workspace |
+| `POST /api/parse` | Implemented | Bounded `.xlsx` parsing and Brain matching |
+| `POST /api/orchestrate` | Local prototype | InDesign PDF export for PDF-compatible Brain jobs only |
+| Campaign/share routes | Not wired yet | Planned binding of the tested persistence service to Specific Postgres |
 
-## The two halves
+## Briefd data flow
 
-**1. Briefd (the app).** `src/app/briefd/page.tsx` renders a three-tab workspace (format cards / calendar / spreadsheet) over `CAMPAIGN_FORMATS` demo data. The open format detail is driven by the `?format=` URL parameter (`useSearchParams`), so browser back/forward works. Components follow atomic design:
-
-```
-src/components/
-├── atoms/       Button (the btn-morph pill), CropFrame (print crop marks), GeometricGlyph
-├── molecules/   Modal (accessible shell used by both dialogs)
-└── briefd/      Feature organisms: FormatCardItem, FormatDetailView, BriefdSidebar,
-                 BriefdCalendarView, BriefdSpreadsheetView, ShareLiveBriefModal,
-                 FinaliAIModal, PreflightLoader
-```
-
-Shared domain modules:
-
-- `src/lib/briefd/types.ts` — `FormatData`, `SectionCategory`
-- `src/lib/briefd/categories.ts` — the four categories with every color/title used by any view
-- `src/hooks/useCopyToClipboard.ts` — copy-with-feedback
-
-**2. The InDesign pipeline (the engine).** The Finali AI prototype:
-
-```
-.xlsx upload ─▶ parseExcelBuffer (exceljs) ─▶ matchToBrain (brain.json)
-                                                    │
-.zip with .indd master ─▶ unzip ─▶ find master ─────┤
-                                                    ▼
-                        runLocalInDesignJob (AppleScript → InDesign 2026)
-                                                    ▼
-                        src/scripts/processJob.jsx (ExtendScript, runs inside InDesign)
-                                                    ▼
-                        PDF written to public/output/ (gitignored)
+```text
+.xlsx
+  → bounded multipart reader
+  → sheet/header detection or explicit mapping
+  → typed source rows with stable ids and ISO deadlines
+  → canonical/curated-alias Brain matching
+  → import review
+      ↳ assign cited Brain spec (verified)
+      ↳ enter campaign-local values (user-provided)
+  → one normalized FormatData model
+  → cards / detail / calendar / table / copy / CSV
 ```
 
-- `src/lib/jobOrchestrator.ts` — Excel parsing with Swedish/English column detection, and spec matching. Unit-tested in `jobOrchestrator.test.ts`.
-- `src/lib/data/brain.json` — "The Brain": the publisher spec database (6 entries today).
-- `src/lib/api/adobe/localBridge.ts` — passes job arguments base64-encoded through InDesign's script-args and runs the JSX via `osascript`.
-- `src/scripts/processJob.jsx` — the ExtendScript that opens the master, injects campaign text and exports the PDF. `src/scripts/experiments/` holds two in-progress attempts at automatic page resizing — the unsolved step.
+Key modules:
 
-### The InDesign pipeline is local-only
+- `src/lib/jobOrchestrator.ts` — workbook parsing, source traceability, date normalization, and matching.
+- `src/lib/data/brain.json` plus `src/lib/briefd/brain.ts` — 12 validated, sourced provisional specifications across all four categories.
+- `src/lib/briefd/corrections.ts` — explicit verified versus user-provided resolution.
+- `src/lib/briefd/format.ts`, `calendar.ts`, and `table.ts` — shared presentation and export logic over structured data.
+- `src/lib/briefd/persistence/*` — capability security, write contracts, server-side Brain reconstruction, ownership, revisions, sharing lifecycle, and repository boundary.
+- `migrations/001_create_briefd_campaigns.toml` — normalized local campaign/share schema. The original workbook is deliberately not retained.
 
-`/api/orchestrate` shells out to `unzip` and `osascript` and requires Adobe InDesign 2026 installed. It can never run on a serverless host. The researched path to cloud rendering is Adobe Firefly Services / InDesign APIs (see git history for the mocked client that documents the payload shapes); that is the known next milestone for Finali AI.
+## Persistence security model
 
-## What is intentionally not built yet
+- Campaign ids identify records but do not authorize editing.
+- The editor receives a random 256-bit capability; only its SHA-256 hash may be stored.
+- Verified write inputs contain only a row id and Brain spec id. The server reconstructs dimensions, requirements, publisher, and evidence from the Brain.
+- Updates use optimistic revisions.
+- Share capabilities are separate random 256-bit tokens, stored only as hashes, view-only, expirable, and revocable.
+- Shared DTOs omit workbook rows, raw values, source filename, mapping, owner material, and share hashes.
+- Sharing is blocked while any imported row remains unresolved.
 
-- No database, auth or persistence — Briefd shows demo data and shares a static URL. The zero-login live link requires a store (add via `specific.hcl` — Postgres and object storage are one block each).
-- The calendar renders a hardcoded September 2026 grid matching the demo campaign.
-- Overset-text detection exists only as the `anomaly` field on `FormatData`.
+These are implemented domain invariants. Runtime/database verification remains required before the sharing UI is enabled.
 
-## Quality gates
+## InDesign prototype
 
-`npm run build`, `npm test`, `npm run lint` (zero warnings) and `npm run typecheck` must all pass. Design rules are enforced by convention through tokens and atoms — see [design-system.md](design-system.md).
+```text
+.xlsx → parser/Brain → PDF-compatible jobs only
+.zip containing .indd → unzip → local AppleScript bridge → InDesign ExtendScript → public/output
+```
+
+Non-PDF Brain jobs are rejected before InDesign runs. The prototype still depends on a local application installation and does not prove cloud rendering, PDF/X validation, ICC enforcement, approval, or external delivery.
+
+## Evidence and quality gates
+
+- `npm run check` — typecheck, lint, and focused tests.
+- `npm run build` — normal production build; `next build --webpack` is an equivalent fallback when the execution sandbox blocks Turbopack worker ports.
+- `specific check` — validates infrastructure and Reshape migrations.
+- Browser acceptance is required for the complete upload/correction/view flow and, once wired, two-session persistence/share/revocation.
+- Autoreview must return no actionable findings after the final runtime and UI changes.
+
+See `docs/briefd-release-contract.md` for the precise evidence boundary and `docs/briefd-assessment.md` for the execution plan.

@@ -46,7 +46,7 @@ export default function Home() {
 
           {/* Lead Ingress */}
           <p className="text-lead text-graphite/85 max-w-4xl">
-            Static sheets and messy email chains cause version chaos and costly production errors. Briefd translates your media plans into clean, scale-accurate format cards shared via a single live link. Completely free.
+            Static sheets and messy email chains cause version chaos. Briefd turns supported .xlsx rows into traceable format cards, then asks you to review unmatched or uncertain data before using it.
           </p>
 
           {/* Action Buttons */}
@@ -103,7 +103,7 @@ export default function Home() {
                   We built Briefd (by Finali) as a focused, lightweight tool to eliminate spreadsheet chaos for media agencies, brand managers, and production teams.
                 </p>
                 <p className="text-[clamp(0.75rem,0.92vw,1.1rem)] font-normal leading-[1.38]">
-                  By creating a clean visual workspace for campaign delivery, we are building the industry&apos;s most reliable ad spec ecosystem while laying the foundation for next-generation automated artwork production.
+                  The current local utility is backed by 12 provisional, cited specifications across social, display, out-of-home, and print. Broader coverage and artwork automation remain product directions, not shipped claims.
                 </p>
               </div>
             </div>
@@ -137,11 +137,11 @@ export default function Home() {
             It is a translation problem.
           </h2>
 
-          {/* Video / Animation Placeholder Box (internal note to the team) */}
+          {/* Product-status explanation */}
           <div className="w-full aspect-[16/9] md:aspect-[21/9] min-h-[300px] md:min-h-[440px] bg-white flex flex-col items-center justify-center text-center gap-2 p-8">
-            <span className="text-ui font-medium text-graphite/50">Internal note</span>
+            <span className="text-ui font-medium text-graphite/50">What Briefd does today</span>
             <span className="text-lead font-medium text-graphite/70 max-w-3xl">
-              Animation eller förklarande video, eller illustration av något slag.
+              It parses workbooks, preserves source rows, distinguishes cited Brain specifications from user-provided corrections, and keeps every workspace view on one structured data model.
             </span>
           </div>
         </section>
@@ -151,11 +151,11 @@ export default function Home() {
       <CropFrame className="w-full">
         <section className="w-full bg-petrol text-cyan px-6 sm:px-12 md:px-20 py-16 sm:py-24 md:py-30 flex flex-col items-center justify-center text-center gap-6">
           <h2 className="h1 text-cyan max-w-5xl">
-            One link for the<br />
-            entire team
+            Local sharing,<br />
+            proven before promised
           </h2>
           <p className="text-lead text-cyan/90 max-w-4xl">
-            Share with your designers, media agency, and client. Everyone<br className="hidden md:inline" /> stays aligned to the latest live specs without version conflicts.
+            Briefd&apos;s release contract requires an opaque, revocable, view-only link<br className="hidden md:inline" /> to work across two local browser sessions before any external-sharing claim is made.
           </p>
         </section>
       </CropFrame>
@@ -213,7 +213,7 @@ export default function Home() {
                   </h3>
                 </div>
                 <p className="text-body text-cyan/90 mt-6">
-                  Drop in your .xlsx plan. Briefd parses formats, dimensions, publishers, and delivery dates automatically without rigid templates.
+                  Drop in an .xlsx plan. Briefd detects common English and Swedish headers across worksheets, and lets you correct the interpretation before continuing.
                 </p>
               </div>
 
@@ -236,12 +236,12 @@ export default function Home() {
                 <div>
                   <span className="h2 text-cyan leading-none block mb-4">3</span>
                   <h3 className="h3 text-cyan leading-tight">
-                    Share the<br />
-                    live link.
+                    Hand off the<br />
+                    reviewed brief.
                   </h3>
                 </div>
                 <p className="text-body text-cyan/90 mt-6">
-                  Generate a shareable URL. Designers copy dimensions with a single click while planners keep full control over deliveries.
+                  Today, copy or export the reviewed requirements locally. Revocable view-only sharing remains disabled until its local database flow has been proven end to end.
                 </p>
               </div>
             </div>

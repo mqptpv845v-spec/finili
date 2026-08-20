@@ -1,6 +1,8 @@
 # Briefd by Finali & Finali AI – Strategisk Produktsammanfattning
 *Källa: Google NotebookLM*
 
+> **Strategisk vision — inte produktspecifikation.** Dokumentet sammanfattar en målbild och affärshypoteser. Se `docs/briefd-release-contract.md` för verifierad nulägesgräns.
+
 Detta dokument dekonstruerar affärsmodellen, produktarkitekturen och de tekniska samt juridiska vallgravarna för Briefd och Finali AI. Syftet är att ge en skarp översikt över hur vi går från det analoga "Excel-kaoset" till en automatiserad, trycksäker och högmarginal-SaaS-plattform för grafisk produktion.
 
 ---

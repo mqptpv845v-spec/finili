@@ -1,6 +1,8 @@
 # Finali AI — Teknisk Dekonstruktion av Motorn
 *Källa: Google NotebookLM*
 
+> **Teknisk vision — inte implementerad arkitektur.** Beskrivningen nedan är en föreslagen målbild och motsvarar inte den nuvarande lokala InDesign-prototypen. Se `docs/architecture.md` och `docs/briefd-release-contract.md` för verifierat nuläge.
+
 Finali AI är en stängd, deterministisk layout- och preflight-motor i backend som helt automatiserar "sista milen" i den grafiska produktionen (DTP/originalarbete).
 
 Det är den betalda kärnprodukten där magin faktiskt sker under huven. Istället för att en formgivare ska sitta och manuellt rita om en godkänd master-design till 30 olika format utifrån torra rader i en Excel-fil, tar Finali över och genererar alla tryck- och publicistklara originalfiler på under 15 sekunder.

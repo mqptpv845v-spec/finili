@@ -2,10 +2,12 @@
 
 **The missing layer between media planning and creative production.**
 
-Finali is two products in one ecosystem:
+Finali is a product direction with one usable local Briefd workflow and a separate automation prototype:
 
-1. **Briefd** (free) — drop an Excel media plan in the browser and every row becomes a visual *format card* with true proportions, exact dimensions, deadlines and a link to the publisher's spec page. Share one live link with the whole team. No logins, no file versions, no email chains.
-2. **Finali AI** (paid, in development) — upload an InDesign master together with the media plan and generate every campaign format as print-ready PDF/X, reviewed and approved by a human before export.
+1. **Briefd** — parse an Excel media plan, confirm its column mapping, and resolve each row against a cited provisional Brain spec or visibly user-provided values. Cards, calendar, detail, copy, and export use the same structured data. Local persistence and sharing are under implementation and are not externally available.
+2. **Finali AI** (concept plus local prototype) — a macOS-only API can drive a local InDesign installation for PDF-compatible jobs. It is not a hosted, validated production service.
+
+No real agency media plans are available in this repository, so the parser and 12-format Brain are tested with synthetic fixtures and authoritative public sources. Useful real-world coverage is not yet claimed.
 
 Read [docs/product.md](docs/product.md) for the full product thinking, and [docs/architecture.md](docs/architecture.md) for how the code is put together.
 

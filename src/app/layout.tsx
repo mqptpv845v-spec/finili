@@ -10,8 +10,8 @@ const instrumentSans = Instrument_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Finali - Automate your print & multi-format production",
-  description: "Connect InDesign templates with your media plans. Generate dozens of print-ready, fully validated PDF/X files in seconds.",
+  title: "Briefd by Finali — review media-plan requirements",
+  description: "Parse an .xlsx media plan into a traceable, correctable workspace backed by a provisional set of cited publisher specifications.",
 };
 
 export default function RootLayout({
