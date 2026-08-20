@@ -70,6 +70,7 @@ export default function Home() {
               src="/bento-bg.png"
               alt="Continuous halftone landscape backdrop"
               fill
+              loading="eager"
               unoptimized
               className="object-cover"
             />
@@ -139,7 +140,7 @@ export default function Home() {
 
           {/* Product-status explanation */}
           <div className="w-full aspect-[16/9] md:aspect-[21/9] min-h-[300px] md:min-h-[440px] bg-white flex flex-col items-center justify-center text-center gap-2 p-8">
-            <span className="text-ui font-medium text-graphite/50">What Briefd does today</span>
+            <span className="text-ui font-medium text-graphite/70">What Briefd does today</span>
             <span className="text-lead font-medium text-graphite/70 max-w-3xl">
               It parses workbooks, preserves source rows, distinguishes cited Brain specifications from user-provided corrections, and keeps every workspace view on one structured data model.
             </span>
@@ -183,6 +184,7 @@ export default function Home() {
               src="/turn-rows-art.png"
               alt="Halftone cloud artwork"
               fill
+              loading="eager"
               unoptimized
               className="object-cover"
             />
@@ -319,7 +321,7 @@ export default function Home() {
               height={30}
               className="h-6 sm:h-7 w-auto cursor-pointer invert"
             />
-            <p className="text-yellow/85 leading-relaxed mt-1">
+            <p className="text-yellow leading-relaxed mt-1">
               The connective infrastructure between media planning and creative execution. Built by agency veterans in Stockholm.
             </p>
           </div>
@@ -327,7 +329,7 @@ export default function Home() {
           {/* Product Col */}
           <div className="flex flex-col gap-2.5">
             <span className="font-bold text-yellow">Product</span>
-            <div className="flex flex-col gap-1.5 text-yellow/85">
+            <div className="flex flex-col gap-1.5 text-yellow">
               <a href="#workflow" className="hover:text-yellow hover:underline transition-all">Briefd (Free Utility)</a>
               <a href="#about" className="hover:text-yellow hover:underline transition-all">Finali Automation (Coming Soon)</a>
               <a href="#workflow" className="hover:text-yellow hover:underline transition-all">Supported Formats</a>
@@ -338,7 +340,7 @@ export default function Home() {
           {/* Company Col */}
           <div className="flex flex-col gap-2.5">
             <span className="font-bold text-yellow">Company</span>
-            <div className="flex flex-col gap-1.5 text-yellow/85">
+            <div className="flex flex-col gap-1.5 text-yellow">
               <a href="#about" className="hover:text-yellow hover:underline transition-all">About Us</a>
               <a href="#workflow" className="hover:text-yellow hover:underline transition-all">Media Agency Network</a>
               <a href="#about" className="hover:text-yellow hover:underline transition-all">Design Philosophy</a>
@@ -348,7 +350,7 @@ export default function Home() {
         </div>
 
         {/* Bottom Tier: Office Locations & Copyright */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-[0.75rem] font-medium text-yellow/75">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-[0.75rem] font-medium text-yellow">
           <div className="flex flex-wrap items-center gap-4">
             <span>Stockholm, Sweden</span>
             <span>·</span>
