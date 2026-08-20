@@ -1,4 +1,22 @@
 [[actions]]
+type = "custom"
+start = """
+WITH ranked_rows AS (
+  SELECT id,
+         ROW_NUMBER() OVER (
+           PARTITION BY campaign_id
+           ORDER BY row_number, id
+         ) - 1 AS next_sort_order
+    FROM briefd_campaign_rows
+)
+UPDATE briefd_campaign_rows AS campaign_row
+   SET sort_order = ranked_rows.next_sort_order
+  FROM ranked_rows
+ WHERE campaign_row.id = ranked_rows.id;
+"""
+abort = "SELECT 1;"
+
+[[actions]]
 type = "add_index"
 table = "briefd_campaign_rows"
 
