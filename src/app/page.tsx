@@ -152,11 +152,11 @@ export default function Home() {
       <CropFrame className="w-full">
         <section className="w-full bg-petrol text-cyan px-6 sm:px-12 md:px-20 py-16 sm:py-24 md:py-30 flex flex-col items-center justify-center text-center gap-6">
           <h2 className="h1 text-cyan max-w-5xl">
-            Local sharing,<br />
-            proven before promised
+            Revocable sharing,<br />
+            proven end to end
           </h2>
           <p className="text-lead text-cyan/90 max-w-4xl">
-            Briefd&apos;s release contract requires an opaque, revocable, view-only link<br className="hidden md:inline" /> to work across two local browser sessions before any external-sharing claim is made.
+            Briefd&apos;s opaque, revocable, view-only links have been verified<br className="hidden md:inline" /> across isolated owner and viewer sessions on the deployed production service.
           </p>
         </section>
       </CropFrame>
@@ -243,7 +243,7 @@ export default function Home() {
                   </h3>
                 </div>
                 <p className="text-body text-cyan/90 mt-6">
-                  Today, copy or export reviewed requirements and create revocable view-only links inside the local Specific environment. External availability is not claimed.
+                  Today, copy or export reviewed requirements and create revocable view-only links on the deployed Specific service.
                 </p>
               </div>
             </div>

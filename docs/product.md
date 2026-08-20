@@ -15,7 +15,7 @@ Between a media plan (an Excel sheet from the media agency) and finished ad file
 A local-first visual web tool intended to reduce Excel ambiguity in the creative handoff:
 
 - Drag in an `.xlsx` media plan, confirm its interpretation, and resolve each row into a **format card** backed by either cited Brain evidence or visibly user-provided values.
-- Opaque, revocable, view-only links are proven locally against Specific Postgres in two isolated browser sessions. External sharing remains unclaimed until a deployment is separately authorized and verified.
+- Opaque, revocable, view-only links are verified against deployed Specific Postgres in isolated owner and viewer browser sessions, including live revision loading and immediate revocation.
 - Free on purpose: brand awareness, data on which formats/publishers dominate the Nordics, direct contact with the designers who feel the pain, and every "Automate with Finali AI" click is a warm lead.
 
 ### Finali AI — Phase 2, the paid engine

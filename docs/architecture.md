@@ -2,13 +2,13 @@
 
 ## Status boundary
 
-Briefd is a local-first, correctable media-plan utility. Its parser, sourced provisional Brain, correction workflow, three workspace views, PostgreSQL persistence, and revocable view-only links are implemented. The Specific-backed flow has passed repository integration, reload, authorization, live-revision, two-browser, and revocation checks. Deployment and external availability remain unverified.
+Briefd is a correctable media-plan utility deployed at `https://plump-vulture.spcf.app/briefd`. Its parser, sourced provisional Brain, correction workflow, three workspace views, PostgreSQL persistence, and revocable view-only links are implemented. The Specific-backed flow has passed repository integration plus production create, reload, revision update, isolated view-only access, revocation, and cleanup checks.
 
 Finali AI is separate. `/api/orchestrate` is a macOS-only prototype that drives a locally installed Adobe InDesign; it is not a hosted or validated production engine.
 
 ## Stack
 
-Next.js 16 App Router, React 19, strict TypeScript, Tailwind CSS v4, ExcelJS, Vitest, ESLint, and Specific. `specific.hcl` defines the web service and local PostgreSQL database with Reshape migrations.
+Next.js 16 App Router, React 19, strict TypeScript, Tailwind CSS v4, ExcelJS, Vitest, ESLint, and Specific. `specific.hcl` defines the web service and PostgreSQL database with Reshape migrations for local development and production.
 
 ## Routes
 

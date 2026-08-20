@@ -1,10 +1,10 @@
 # Briefd — product assessment and execution plan
 
-> **Implementation status, 2026-08-20:** the historical audit facts below describe `3e81757`. Phases 1–7 are now materially implemented and locally verified. Specific-backed persistence, owner reload, live shared revisions, view-only authorization, and revocation passed repository integration and two isolated browser sessions. Validation still uses synthetic plans, so neither real-plan coverage nor external sharing is claimed.
+> **Implementation status, 2026-08-20:** the historical audit facts below describe `3e81757`. Phases 1–7 are now materially implemented. Specific-backed persistence, owner reload, live shared revisions, view-only authorization, revocation, and cleanup passed locally and on the deployed production service at `https://plump-vulture.spcf.app/briefd`. Validation still uses synthetic plans, so real agency-plan coverage is not claimed.
 
 *Evidence-backed discovery, 2026-08-20. Code facts and observed runtime behavior from the original read-only audit are cited throughout; product inferences and recommendations are labelled as such. This document remains the execution contract, with the status above taking precedence over historical present-tense findings.*
 
-**Backend constraint agreed with the product owner:** all backend work (database, persistence, share links) targets **local development via `specific dev` only** for now. No `specific deploy` step is in scope. The implementation should avoid unnecessary coupling to the local environment, but deployment readiness is not claimed or verified in this release.
+**Historical backend constraint:** the original execution plan targeted local development via `specific dev`. The product owner subsequently authorized deployment, and the production persistence/share flow was verified separately; the historical phase text below remains unchanged as an audit record.
 
 ---
 

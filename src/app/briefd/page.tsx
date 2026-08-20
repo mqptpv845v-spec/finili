@@ -309,7 +309,7 @@ function BriefdApp() {
         </div>
         {ownerCampaign ? <Button variant="outline" size="lg" disabled={busy} onClick={cancelCampaignUpdate}>Cancel update</Button> : <Button variant="soft" size="lg" disabled={busy} onClick={loadSample}>Explore the source-backed demo</Button>}
         {uploadError && <p className="text-value font-semibold text-plum" role="alert">{uploadError}</p>}
-        <p className="text-label text-black/60 max-w-xl">Uploads are parsed locally by this running app. Real agency-plan validation and external sharing are not claimed.</p>
+        <p className="text-label text-black/60 max-w-xl">Uploads are parsed by this running app. Production sharing is verified; validation against real agency plans is not yet claimed.</p>
       </div>}
 
       {viewState === "review" && plan && sourceFile && <ImportReview plan={plan} matched={formats} unmatched={unmatched} busy={busy} error={uploadError} onResolve={resolveRow} onContinue={() => void saveImportedCampaign()} onReparse={(settings) => parseFile(sourceFile, settings)} />}

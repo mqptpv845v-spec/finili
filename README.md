@@ -2,9 +2,9 @@
 
 **The missing layer between media planning and creative production.**
 
-Finali is a product direction with one usable local Briefd workflow and a separate automation prototype:
+Finali is a product direction with one deployed Briefd workflow and a separate local automation prototype:
 
-1. **Briefd** — parse an Excel media plan, confirm its column mapping, and resolve each row against a cited provisional Brain spec or visibly user-provided values. Cards, calendar, detail, copy, and export use the same structured data. Specific-backed persistence and revocable view-only links are implemented and verified locally; external availability is not claimed.
+1. **Briefd** — parse an Excel media plan, confirm its column mapping, and resolve each row against a cited provisional Brain spec or visibly user-provided values. Cards, calendar, detail, copy, and export use the same structured data. Specific-backed persistence and revocable view-only links are deployed and production-verified at [plump-vulture.spcf.app/briefd](https://plump-vulture.spcf.app/briefd).
 2. **Finali AI** (concept plus local prototype) — a macOS-only API can drive a local InDesign installation for PDF-compatible jobs. It is not a hosted, validated production service.
 
 No real agency media plans are available in this repository, so the parser and 12-format Brain are tested with synthetic fixtures and authoritative public sources. Useful real-world coverage is not yet claimed.
@@ -24,6 +24,8 @@ specific dev
 
 Open the web-service URL printed by Specific (normally `http://localhost:3001`) — the marketing page is at `/`, the Briefd app at `/briefd`. Plain `npm run dev` can render the UI and parser, but cannot save or share campaigns unless `DATABASE_URL` points to a migrated Postgres database.
 
+For a representative local upload, use [`samples/briefd-test-plan.xlsx`](samples/briefd-test-plan.xlsx). It contains five source-backed matches and one intentional manual-correction row.
+
 ### The Finali AI prototype (macOS only)
 
 `POST /api/orchestrate` drives a **locally installed Adobe InDesign 2026** over AppleScript to generate real PDFs from an `.indd` master. It only works in local development on a Mac with InDesign installed. See [docs/architecture.md](docs/architecture.md#the-indesign-pipeline).
@@ -39,7 +41,7 @@ Open the web-service URL printed by Specific (normally `http://localhost:3001`) 
 | `npm run lint`      | ESLint                                |
 | `npm run typecheck` | TypeScript, no emit                   |
 | `specific dev`      | Local dev environment via Specific    |
-| `specific deploy`   | Infrastructure deploy command; not run or verified for this release |
+| `specific deploy`   | Deploy the verified web service and Postgres environment |
 
 ## Repository map
 

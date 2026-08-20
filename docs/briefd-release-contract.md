@@ -9,7 +9,7 @@ A planner can upload an `.xlsx` workbook, confirm how its columns were interpret
 - **Brain-verified** — matched to a sourced specification in `src/lib/data/brain.json`.
 - **User-provided** — completed for this campaign by the user and not represented as publisher-verified.
 
-Cards, calendar, table, detail, copy, and export views must derive from the same campaign data. The local environment must prove persistence and an opaque, revocable, view-only share link across two browser sessions. External sharing is not claimed until deployment is separately authorized and verified.
+Cards, calendar, table, detail, copy, and export views must derive from the same campaign data. Persistence and an opaque, revocable, view-only share link have been verified locally and on the deployed Specific production service across isolated owner and viewer sessions.
 
 ## Provisional verified coverage
 
