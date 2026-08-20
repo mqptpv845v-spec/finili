@@ -16,6 +16,20 @@ export function FormatDetailView({ format, onBack }: Props) {
   const ratio = format.dimensions.width / format.dimensions.height;
   const width = ratio >= 1 ? maxArtboard : Math.max(180, Math.round(maxArtboard * ratio));
   const height = ratio >= 1 ? Math.max(150, Math.round(maxArtboard / ratio)) : maxArtboard;
+  const artboardGuides = [
+    format.requirements.bleedMm != null
+      ? { label: `Bleed ${format.requirements.bleedMm} mm`, className: "inset-2 border-amber-700/70" }
+      : null,
+    format.dimensions.visibleWidth && format.dimensions.visibleHeight
+      ? { label: `Visible ${format.dimensions.visibleWidth} × ${format.dimensions.visibleHeight} mm`, className: "inset-[7%] border-petrol/70" }
+      : null,
+    format.requirements.imageSafeMm != null
+      ? { label: `Image safe ${format.requirements.imageSafeMm} mm`, className: "inset-[13%] border-violet-700/70" }
+      : null,
+    format.requirements.textSafeMm != null
+      ? { label: `Text safe ${format.requirements.textSafeMm} mm`, className: "inset-[19%] border-blue-700/70" }
+      : null,
+  ].filter((guide): guide is { label: string; className: string } => guide !== null);
   const requirementRows = [
     ["Bleed", format.requirements.bleedMm != null ? `${format.requirements.bleedMm} mm` : null],
     ["Text safe area", format.requirements.textSafeMm != null ? `${format.requirements.textSafeMm} mm` : null],
@@ -43,9 +57,15 @@ export function FormatDetailView({ format, onBack }: Props) {
       <div className="bg-light p-8 sm:p-12 overflow-auto">
         <div className="mx-auto flex flex-col items-center gap-3" style={{ width }}>
           <span className="text-label text-black/60">Width: {format.dimensions.width} {format.dimensions.unit}</span>
-          <div className="bg-white border border-black/30 flex items-center justify-center p-5 text-center" style={{ width, height }}>
-            <div><span className="text-value block">{dimensions}</span><span className="text-label text-black/60">Aspect ratio {ratioLabel(format.dimensions)}</span></div>
+          <div className="relative bg-white border border-black/30 flex items-center justify-center p-5 text-center" style={{ width, height }}>
+            {artboardGuides.map((guide) => (
+              <div key={guide.label} className={`pointer-events-none absolute border border-dashed ${guide.className}`} aria-hidden="true">
+                <span className="absolute left-1 top-1 bg-white/90 px-1 text-[10px] leading-tight text-black/70">{guide.label}</span>
+              </div>
+            ))}
+            <div className="relative z-10 bg-white/85 px-2 py-1"><span className="text-value block">{dimensions}</span><span className="text-label text-black/60">Aspect ratio {ratioLabel(format.dimensions)}</span></div>
           </div>
+          {artboardGuides.length > 0 && <span className="text-label text-black/60">Source-recorded guides shown for reference, not to scale.</span>}
           <span className="text-label text-black/60">Height: {format.dimensions.height} {format.dimensions.unit}</span>
         </div>
       </div>
