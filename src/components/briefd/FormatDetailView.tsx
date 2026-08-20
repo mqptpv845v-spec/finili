@@ -60,7 +60,7 @@ export function FormatDetailView({ format, onBack }: Props) {
           <div className="relative bg-white border border-black/30 flex items-center justify-center p-5 text-center" style={{ width, height }}>
             {artboardGuides.map((guide) => (
               <div key={guide.label} className={`pointer-events-none absolute border border-dashed ${guide.className}`} aria-hidden="true">
-                <span className="absolute left-1 top-1 bg-white/90 px-1 text-[10px] leading-tight text-black/70">{guide.label}</span>
+                <span className="absolute left-1 top-1 bg-white/90 px-1 text-label leading-tight text-black/70">{guide.label}</span>
               </div>
             ))}
             <div className="relative z-10 bg-white/85 px-2 py-1"><span className="text-value block">{dimensions}</span><span className="text-label text-black/60">Aspect ratio {ratioLabel(format.dimensions)}</span></div>
