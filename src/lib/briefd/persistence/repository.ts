@@ -126,7 +126,7 @@ async function insertSnapshotRows(sql: TransactionSql, snapshot: CampaignSnapsho
     const databaseRowId = randomUUID();
     databaseRowIds.set(row.id, databaseRowId);
     await sql`
-      INSERT INTO briefd_campaign_rows (
+      INSERT INTO public.briefd_campaign_rows (
         id, campaign_id, source_row_id, sheet_name, row_number, campaign_name,
         publisher, format_name, deadline, deadline_raw, notes, raw_values, sort_order
       ) VALUES (
@@ -142,7 +142,7 @@ async function insertSnapshotRows(sql: TransactionSql, snapshot: CampaignSnapsho
     const campaignRowId = databaseRowIds.get(format.id);
     if (!campaignRowId) throw new Error(`Resolved format ${format.id} does not belong to a stored campaign row.`);
     await sql`
-      INSERT INTO briefd_resolved_formats (
+      INSERT INTO public.briefd_resolved_formats (
         id, campaign_row_id, trust, brain_spec_id, category, category_tag,
         publisher, format_name, width, height, unit, visible_width, visible_height,
         deadline, deadline_raw, requirements, file_types, source_evidence, notes,
@@ -165,7 +165,7 @@ async function readCampaign(sql: TransactionSql, id: string): Promise<StoredCamp
   const campaignRows = await sql<CampaignDatabaseRow[]>`
     SELECT id, owner_session_hash, name, client_name, source_filename, sheet_name,
            header_row, column_mapping, revision
-      FROM briefd_campaigns
+      FROM public.briefd_campaigns
      WHERE id = ${id}
   `;
   const campaign = campaignRows[0];
@@ -174,7 +174,7 @@ async function readCampaign(sql: TransactionSql, id: string): Promise<StoredCamp
   const storedRows = await sql<CampaignRowDatabaseRow[]>`
     SELECT source_row_id, sheet_name, row_number, campaign_name, publisher,
            format_name, deadline::text AS deadline, deadline_raw, notes, raw_values
-      FROM briefd_campaign_rows
+      FROM public.briefd_campaign_rows
      WHERE campaign_id = ${id}
      ORDER BY sort_order ASC, row_number ASC, id ASC
   `;
@@ -197,8 +197,8 @@ async function readCampaign(sql: TransactionSql, id: string): Promise<StoredCamp
            f.visible_width, f.visible_height, f.deadline::text AS deadline,
            f.deadline_raw, f.requirements, f.file_types, f.source_evidence,
            f.notes, f.metadata
-      FROM briefd_resolved_formats AS f
-      JOIN briefd_campaign_rows AS r ON r.id = f.campaign_row_id
+      FROM public.briefd_resolved_formats AS f
+      JOIN public.briefd_campaign_rows AS r ON r.id = f.campaign_row_id
      WHERE r.campaign_id = ${id}
      ORDER BY f.sort_order ASC, r.row_number ASC, r.id ASC
   `;
@@ -250,13 +250,15 @@ async function readCampaign(sql: TransactionSql, id: string): Promise<StoredCamp
 }
 
 export class PostgresCampaignRepository implements CampaignRepository {
+  // Specific can retain a completed Reshape compatibility schema in DATABASE_URL;
+  // runtime CRUD must target the finalized physical schema, not stale rollout views.
   constructor(private readonly sql: Sql) {}
 
   async createCampaign(record: StoredCampaign): Promise<void> {
     await this.sql.begin(async (sql) => {
       const { snapshot } = record;
       await sql`
-        INSERT INTO briefd_campaigns (
+        INSERT INTO public.briefd_campaigns (
           id, owner_session_hash, name, client_name, source_filename, sheet_name,
           header_row, column_mapping, revision
         ) VALUES (
@@ -278,7 +280,7 @@ export class PostgresCampaignRepository implements CampaignRepository {
       const { snapshot } = record;
       const locked = await sql<{ id: string; revision: number | string }[]>`
         SELECT id, revision
-          FROM briefd_campaigns
+          FROM public.briefd_campaigns
          WHERE id = ${snapshot.id}
            AND owner_session_hash = ${record.ownerSessionHash}
          FOR UPDATE
@@ -289,7 +291,7 @@ export class PostgresCampaignRepository implements CampaignRepository {
         const activeShares = await sql<{ exists: boolean }[]>`
           SELECT EXISTS (
             SELECT 1
-              FROM briefd_share_tokens
+              FROM public.briefd_share_tokens
              WHERE campaign_id = ${snapshot.id}
                AND revoked_at IS NULL
                AND (expires_at IS NULL OR expires_at > ${now})
@@ -299,7 +301,7 @@ export class PostgresCampaignRepository implements CampaignRepository {
       }
 
       const updated = await sql<{ id: string }[]>`
-        UPDATE briefd_campaigns
+        UPDATE public.briefd_campaigns
            SET name = ${snapshot.campaignName},
                client_name = ${snapshot.clientName},
                source_filename = ${snapshot.sourceFilename ?? null},
@@ -315,20 +317,20 @@ export class PostgresCampaignRepository implements CampaignRepository {
       `;
       if (updated.length === 0) return "revision-conflict" as const;
 
-      await sql`DELETE FROM briefd_campaign_rows WHERE campaign_id = ${snapshot.id}`;
+      await sql`DELETE FROM public.briefd_campaign_rows WHERE campaign_id = ${snapshot.id}`;
       await insertSnapshotRows(sql, snapshot);
       return "replaced" as const;
     });
   }
 
   async deleteCampaign(id: string): Promise<void> {
-    await this.sql`DELETE FROM briefd_campaigns WHERE id = ${id}`;
+    await this.sql`DELETE FROM public.briefd_campaigns WHERE id = ${id}`;
   }
 
   async listShares(campaignId: string): Promise<StoredShare[]> {
     const rows = await this.sql<ShareDatabaseRow[]>`
       SELECT id, campaign_id, token_hash, created_at, expires_at, revoked_at
-        FROM briefd_share_tokens
+        FROM public.briefd_share_tokens
        WHERE campaign_id = ${campaignId}
        ORDER BY created_at ASC, id ASC
     `;
@@ -339,7 +341,7 @@ export class PostgresCampaignRepository implements CampaignRepository {
     return this.sql.begin(async (sql) => {
       const locked = await sql<{ id: string }[]>`
         SELECT id
-          FROM briefd_campaigns
+          FROM public.briefd_campaigns
          WHERE id = ${share.campaignId}
          FOR UPDATE
       `;
@@ -351,8 +353,8 @@ export class PostgresCampaignRepository implements CampaignRepository {
         const unresolved = await sql<{ exists: boolean }[]>`
           SELECT EXISTS (
             SELECT 1
-              FROM briefd_campaign_rows AS r
-              LEFT JOIN briefd_resolved_formats AS f ON f.campaign_row_id = r.id
+              FROM public.briefd_campaign_rows AS r
+              LEFT JOIN public.briefd_resolved_formats AS f ON f.campaign_row_id = r.id
              WHERE r.campaign_id = ${share.campaignId}
                AND f.id IS NULL
           ) AS exists
@@ -361,7 +363,7 @@ export class PostgresCampaignRepository implements CampaignRepository {
       }
 
       await sql`
-        INSERT INTO briefd_share_tokens (
+        INSERT INTO public.briefd_share_tokens (
           id, campaign_id, token_hash, created_at, expires_at, revoked_at
         ) VALUES (
           ${share.id}, ${share.campaignId}, ${share.tokenHash}, ${share.createdAt},
@@ -375,7 +377,7 @@ export class PostgresCampaignRepository implements CampaignRepository {
   async findShareByTokenHash(tokenHash: string): Promise<StoredShare | null> {
     const rows = await this.sql<ShareDatabaseRow[]>`
       SELECT id, campaign_id, token_hash, created_at, expires_at, revoked_at
-        FROM briefd_share_tokens
+        FROM public.briefd_share_tokens
        WHERE token_hash = ${tokenHash}
     `;
     return rows[0] ? storedShare(rows[0]) : null;
@@ -383,7 +385,7 @@ export class PostgresCampaignRepository implements CampaignRepository {
 
   async revokeShare(campaignId: string, shareId: string, revokedAt: string): Promise<boolean> {
     const rows = await this.sql<{ id: string }[]>`
-      UPDATE briefd_share_tokens
+      UPDATE public.briefd_share_tokens
          SET revoked_at = ${revokedAt}
        WHERE campaign_id = ${campaignId}
          AND id = ${shareId}
