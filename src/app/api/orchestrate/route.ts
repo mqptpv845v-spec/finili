@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { parseExcelBuffer, matchToBrain, OrchestratedJob } from "@/lib/jobOrchestrator";
 import { runLocalInDesignJob } from "@/lib/api/adobe/localBridge";
+import { markUnsupportedPdfJobs } from "@/lib/briefd/pdfOrchestration";
 import fs from "fs/promises";
 import path from "path";
 import { execFile } from "child_process";
@@ -42,11 +43,14 @@ export async function POST(req: NextRequest) {
         const masterBuffer = Buffer.from(await masterFile.arrayBuffer());
 
         const parsedPlan = await parseExcelBuffer(mediaPlanBuffer);
-        const jobs: OrchestratedJob[] = parsedPlan.rows.map(row => matchToBrain(row));
+        const jobs: OrchestratedJob[] = markUnsupportedPdfJobs(parsedPlan.rows.map(row => matchToBrain(row)));
         const validJobs = jobs.filter(job => job.status !== "error");
 
         if (validJobs.length === 0) {
-            return NextResponse.json({ error: "No valid specs found in the media plan." }, { status: 400 });
+            return NextResponse.json({
+                error: "No PDF-compatible specs were found for the local InDesign route.",
+                jobs,
+            }, { status: 400 });
         }
 
         // --- LOCAL INDESIGN WORKFLOW ---
