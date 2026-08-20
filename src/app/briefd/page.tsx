@@ -50,6 +50,7 @@ function BriefdApp() {
   const [dragOver, setDragOver] = useState(false);
   const [finaliOpen, setFinaliOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const uploadInProgressRef = useRef(false);
 
   const selectedFormatId = searchParams.get("format");
   const selectedFormat = formats.find((format) => format.id === selectedFormatId) ?? null;
@@ -61,7 +62,9 @@ function BriefdApp() {
   };
 
   const parseFile = async (file: File, settings?: { sheetName: string; headerRow?: number; mapping?: MediaPlanColumnMapping }) => {
+    if (uploadInProgressRef.current) return;
     if (!file.name.toLowerCase().endsWith(".xlsx")) { setUploadError("Choose an .xlsx media plan."); return; }
+    uploadInProgressRef.current = true;
     setBusy(true); setUploadError(null);
     try {
       const body = new FormData(); body.append("mediaPlan", file);
@@ -78,7 +81,7 @@ function BriefdApp() {
       setPlanMeta({ client: file.name.replace(/\.xlsx$/i, ""), campaign: mapped.campaignName });
       setViewState("review");
     } catch (cause) { setUploadError(cause instanceof Error ? cause.message : "The media plan could not be parsed."); }
-    finally { setBusy(false); }
+    finally { uploadInProgressRef.current = false; setBusy(false); }
   };
 
   const loadSample = () => {
@@ -110,11 +113,15 @@ function BriefdApp() {
     <main className="w-full px-5 sm:px-[30px] py-8 flex-1">
       {viewState === "dropzone" && <div className="w-full max-w-4xl mx-auto py-16 flex flex-col items-center text-center gap-8">
         <div className="max-w-2xl"><h1 className="text-section sm:text-hero font-bold tracking-tight leading-[1.02]">Drop your spreadsheet.<br />Review every result.</h1><p className="text-value font-medium mt-4 leading-relaxed">Briefd translates .xlsx media plans into a traceable format worklist. Its built-in Brain currently contains 12 provisional, cited specifications.</p></div>
-        <input ref={inputRef} id="media-plan-file" type="file" accept=".xlsx" className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void parseFile(file); event.target.value = ""; }} />
-        <label htmlFor="media-plan-file" onDragOver={(event) => { event.preventDefault(); setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(event) => { event.preventDefault(); setDragOver(false); const file = event.dataTransfer.files?.[0]; if (file) void parseFile(file); }} className={`w-full max-w-2xl p-12 sm:p-16 flex flex-col items-center gap-5 cursor-pointer border ${dragOver ? "border-black" : "border-black/10"} focus-within:border-black`}>
-          <FileSpreadsheet className="w-12 h-12" /><div><h2 className="text-title font-bold">Drop an .xlsx media plan here</h2><p className="text-value mt-1">{busy ? "Reading workbook…" : "or press Enter to choose a file"}</p></div>
+        <input ref={inputRef} id="media-plan-file" type="file" accept=".xlsx" disabled={busy} className="sr-only" onChange={(event) => { const file = event.target.files?.[0]; if (file) void parseFile(file); event.target.value = ""; }} />
+        <label htmlFor="media-plan-file" aria-disabled={busy} aria-busy={busy} onDragOver={(event) => { event.preventDefault(); if (!busy) setDragOver(true); }} onDragLeave={() => setDragOver(false)} onDrop={(event) => { event.preventDefault(); setDragOver(false); const file = event.dataTransfer.files?.[0]; if (file) void parseFile(file); }} className={`w-full max-w-2xl p-12 sm:p-16 flex flex-col items-center gap-5 border ${busy ? "cursor-wait opacity-70" : "cursor-pointer"} ${dragOver ? "border-black" : "border-black/10"} focus-within:border-black`}>
+          <FileSpreadsheet className="w-12 h-12" /><div><h2 className="text-title font-bold">Drop an .xlsx media plan here</h2><p className="text-value mt-1" role="status" aria-live="polite">{busy ? "Reading workbook…" : "or press Enter to choose a file"}</p></div>
         </label>
-        <Button variant="soft" size="lg" onClick={loadSample}>Explore the source-backed demo</Button>
+        <div className="max-w-2xl text-left text-label text-black/60 leading-relaxed">
+          <p><strong className="text-black">Expected columns:</strong> publisher and format. Campaign, deadline, and notes are optional; you can map English or Swedish headers after upload.</p>
+          <p>.xlsx files only, up to 10 MB.</p>
+        </div>
+        <Button variant="soft" size="lg" disabled={busy} onClick={loadSample}>Explore the source-backed demo</Button>
         {uploadError && <p className="text-value font-semibold text-plum" role="alert">{uploadError}</p>}
         <p className="text-label text-black/60 max-w-xl">Uploads are parsed locally by this running app. Real agency-plan validation and external sharing are not yet claimed.</p>
       </div>}

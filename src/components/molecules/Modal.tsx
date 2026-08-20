@@ -46,7 +46,12 @@ export function Modal({ isOpen, onClose, variant = "light", label, children }: M
       if (focusable.length === 0) { e.preventDefault(); panelRef.current.focus(); return; }
       const first = focusable[0];
       const last = focusable.at(-1) ?? first;
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      const activeElement = document.activeElement;
+      if (!focusable.includes(activeElement as HTMLElement)) {
+        e.preventDefault();
+        (e.shiftKey ? last : first).focus();
+      }
+      else if (e.shiftKey && activeElement === first) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     };
     document.addEventListener("keydown", handleKeyDown);

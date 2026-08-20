@@ -41,6 +41,8 @@ export function BriefdSpreadsheetView({ formats, onSelectFormat, campaignName = 
       {label}<ArrowUpDown className="w-3 h-3" />
     </button>
   );
+  const sortState = (field: SortField): "ascending" | "descending" | "none" =>
+    sortField === field ? (ascending ? "ascending" : "descending") : "none";
 
   return (
     <div className="w-full bg-white flex flex-col gap-6">
@@ -61,7 +63,7 @@ export function BriefdSpreadsheetView({ formats, onSelectFormat, campaignName = 
       <div className="w-full border border-black/[0.08] overflow-x-auto">
         <table className="w-full text-left border-collapse min-w-[980px]">
           <thead><tr className="border-b border-black/[0.08] bg-black/[0.02] text-label font-bold text-black/60">
-            <th className="p-3">#</th><th className="p-3" aria-sort={sortField === "formatName" ? (ascending ? "ascending" : "descending") : "none"}>{header("Format", "formatName")}</th><th className="p-3">Channel</th><th className="p-3">{header("Publisher", "publisher")}</th><th className="p-3">{header("Dimensions", "dimensions")}</th><th className="p-3">Requirements</th><th className="p-3">File types</th><th className="p-3">{header("Deadline", "deadline")}</th><th className="p-3">Trust</th><th className="p-3 text-right">Source</th>
+            <th className="p-3">#</th><th className="p-3" aria-sort={sortState("formatName")}>{header("Format", "formatName")}</th><th className="p-3">Channel</th><th className="p-3" aria-sort={sortState("publisher")}>{header("Publisher", "publisher")}</th><th className="p-3" aria-sort={sortState("dimensions")}>{header("Dimensions", "dimensions")}</th><th className="p-3">Requirements</th><th className="p-3">File types</th><th className="p-3" aria-sort={sortState("deadline")}>{header("Deadline", "deadline")}</th><th className="p-3">Trust</th><th className="p-3 text-right">Source</th>
           </tr></thead>
           <tbody className="divide-y divide-black/[0.05] text-label">
             {visible.map((format, index) => <tr key={format.id} className={`${CATEGORIES[format.sectionCategory].hoverBg}`}>
