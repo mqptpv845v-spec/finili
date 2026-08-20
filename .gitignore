@@ -60,6 +60,9 @@ next-env.d.ts
 /.tmp/
 /public/output/
 
+# generated billing documents can contain personal and financial data
+/invoices/
+
 # macOS resource forks
 __MACOSX/
 ._*
