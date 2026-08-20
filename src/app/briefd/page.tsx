@@ -60,12 +60,16 @@ function BriefdApp() {
     else router.push(pathname, { scroll: false });
   };
 
-  const parseFile = async (file: File, settings?: { sheetName: string; headerRow: number; mapping: MediaPlanColumnMapping }) => {
+  const parseFile = async (file: File, settings?: { sheetName: string; headerRow?: number; mapping?: MediaPlanColumnMapping }) => {
     if (!file.name.toLowerCase().endsWith(".xlsx")) { setUploadError("Choose an .xlsx media plan."); return; }
     setBusy(true); setUploadError(null);
     try {
       const body = new FormData(); body.append("mediaPlan", file);
-      if (settings) { body.append("sheetName", settings.sheetName); body.append("headerRow", String(settings.headerRow)); body.append("mapping", JSON.stringify(settings.mapping)); }
+      if (settings) {
+        body.append("sheetName", settings.sheetName);
+        if (settings.headerRow != null) body.append("headerRow", String(settings.headerRow));
+        if (settings.mapping) body.append("mapping", JSON.stringify(settings.mapping));
+      }
       const response = await fetch("/api/parse", { method: "POST", body });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error ?? "The media plan could not be parsed.");
