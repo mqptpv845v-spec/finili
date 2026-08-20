@@ -14,8 +14,8 @@ interface BriefdSidebarProps {
   onSelectFormat: (formatId: string | null) => void;
   onSelectCategory: (categoryId: string) => void;
   onResetPlan: () => void;
-  clientName?: string;
-  campaignName?: string;
+  clientName: string;
+  campaignName: string;
 }
 
 // Sidebar tree entries, derived from the single category source of truth.
@@ -32,8 +32,8 @@ export function BriefdSidebar({
   onSelectFormat,
   onSelectCategory,
   onResetPlan,
-  clientName = "Bevero",
-  campaignName = "Black Friday 2026"
+  clientName,
+  campaignName,
 }: BriefdSidebarProps) {
   // ALL CATEGORIES CLOSED BY DEFAULT
   const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
