@@ -1,9 +1,17 @@
 import { deadlineSortValue, formatDeadline, formatDimensions, formatRequirements, ratioLabel } from "./format";
 import type { FormatData } from "./types";
 
+function spreadsheetCell(value: string): string {
+  return /^[=+\-@]/.test(value) ? `'${value}` : value;
+}
+
 function csvCell(value: string): string {
-  const safe = /^[=+\-@]/.test(value) ? `'${value}` : value;
+  const safe = spreadsheetCell(value);
   return `"${safe.replace(/"/g, '""')}"`;
+}
+
+function tsvCell(value: string): string {
+  return spreadsheetCell(value).replace(/[\t\r\n]+/g, " ");
 }
 
 export function sortFormats(formats: FormatData[], field: "deadline" | "formatName" | "publisher" | "category" | "dimensions", ascending = true): FormatData[] {
@@ -45,7 +53,7 @@ export function formatsToTsv(formats: FormatData[]): string {
       format.fileTypes.join(", "),
       formatDeadline(format.deadline, { year: true }),
       format.trust,
-    ].join("\t")),
+    ].map(tsvCell).join("\t")),
   ].join("\n");
 }
 

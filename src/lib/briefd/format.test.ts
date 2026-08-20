@@ -3,7 +3,7 @@ import { mediaSpecs } from "./brain";
 import { resolveManually, resolveWithSpec } from "./corrections";
 import { buildCalendarMonth, formatsByDeadline, moveMonth } from "./calendar";
 import { deadlineSortValue, formatDimensions, ratioLabel } from "./format";
-import { formatsToCsv, safeExportName, sortFormats } from "./table";
+import { formatsToCsv, formatsToTsv, safeExportName, sortFormats } from "./table";
 import { CATEGORY_TAGS } from "./categories";
 import type { UnmatchedRow } from "./mapJobs";
 
@@ -64,6 +64,7 @@ describe("Briefd format helpers", () => {
     const noDate = { ...first, id: "none", deadline: null };
     expect(sortFormats([noDate, second, first], "deadline").map((format) => format.id)).toEqual(["first", "second", "none"]);
     expect(formatsToCsv([second])).toContain("'=HYPERLINK");
+    expect(formatsToTsv([second])).toContain("'=HYPERLINK");
     expect(safeExportName("Spring / Launch 2027")).toBe("spring-launch-2027.csv");
   });
 });

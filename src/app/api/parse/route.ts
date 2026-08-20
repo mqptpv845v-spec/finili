@@ -6,6 +6,7 @@ import {
 } from "@/lib/jobOrchestrator";
 
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+const MAX_REQUEST_BYTES = MAX_UPLOAD_BYTES + 1024 * 1024;
 
 function parseMapping(value: FormDataEntryValue | null): MediaPlanColumnMapping | undefined {
     if (typeof value !== "string" || value.trim() === "") return undefined;
@@ -28,6 +29,10 @@ function parseMapping(value: FormDataEntryValue | null): MediaPlanColumnMapping 
 
 export async function POST(req: NextRequest) {
     try {
+        const contentLength = Number(req.headers.get("content-length"));
+        if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_BYTES) {
+            return NextResponse.json({ error: "The media plan must be smaller than 10 MB." }, { status: 413 });
+        }
         const formData = await req.formData();
         const mediaPlanFile = formData.get("mediaPlan");
 
