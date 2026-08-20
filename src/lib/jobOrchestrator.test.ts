@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import ExcelJS from "exceljs";
+import { mediaSpecs } from "./briefd/brain";
 import {
     matchToBrain,
     parseExcelBuffer,
@@ -79,6 +80,49 @@ describe("parseExcelBuffer", () => {
             publisher: "JCDecaux",
             format: "Eurosize",
             deadline: "2026-09-24",
+        });
+    });
+
+    it("detects headers below a merged title and ignores formatted trailing blank rows", async () => {
+        const buffer = await workbookBuffer((workbook) => {
+            const sheet = workbook.addWorksheet("Campaign plan");
+            sheet.mergeCells("A1:E1");
+            sheet.getCell("A1").value = "Autumn launch media plan";
+            sheet.addRow([]);
+            sheet.addRow(["Campaign", "Publisher", "Format", "Deadline", "Notes"]);
+            sheet.addRow([
+                "Autumn launch",
+                "Google Display",
+                "Panorama — Sweden",
+                "2026-10-12",
+                "Hero placement",
+            ]);
+
+            // Real agency workbooks often retain formatting well below their data.
+            // These rows must not become empty media-plan records after serialization.
+            for (const rowNumber of [5, 6]) {
+                const row = sheet.getRow(rowNumber);
+                row.height = 18;
+                row.getCell(1).fill = {
+                    type: "pattern",
+                    pattern: "solid",
+                    fgColor: { argb: "FFF3F4F6" },
+                };
+            }
+        });
+
+        const plan = await parseExcelBuffer(buffer);
+
+        expect(plan.sheetName).toBe("Campaign plan");
+        expect(plan.headerRow).toBe(3);
+        expect(plan.rows).toHaveLength(1);
+        expect(plan.rows[0]).toMatchObject({
+            source: { sheetName: "Campaign plan", rowNumber: 4 },
+            campaign: "Autumn launch",
+            publisher: "Google Display",
+            format: "Panorama — Sweden",
+            deadline: "2026-10-12",
+            notes: "Hero placement",
         });
     });
 
@@ -186,6 +230,35 @@ describe("parseExcelBuffer", () => {
 });
 
 describe("matchToBrain", () => {
+    it.each(mediaSpecs.map((spec) => [spec.id, spec.publisher, spec.name] as const))(
+        "matches the canonical publisher and format for %s",
+        (specId, publisher, format) => {
+            const job = matchToBrain(mediaPlanRow({ publisher, format }));
+
+            expect(job.status).toBe("pending");
+            expect(job.specs?.id).toBe(specId);
+            expect(job.matchConfidence).toBe("canonical");
+        },
+    );
+
+    it.each(mediaSpecs.map((spec) => [
+        spec.id,
+        spec.publisher_aliases[0],
+        spec.aliases[0],
+    ] as const))(
+        "matches a curated publisher and format alias for %s",
+        (specId, publisher, format) => {
+            expect(publisher, `${specId} needs a representative publisher alias`).toBeTruthy();
+            expect(format, `${specId} needs a representative format alias`).toBeTruthy();
+
+            const job = matchToBrain(mediaPlanRow({ publisher, format }));
+
+            expect(job.status).toBe("pending");
+            expect(job.specs?.id).toBe(specId);
+            expect(job.matchConfidence).not.toBeNull();
+        },
+    );
+
     it("matches an exact publisher and format", () => {
         const job = matchToBrain(mediaPlanRow());
         expect(job.status).toBe("pending");
