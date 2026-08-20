@@ -31,8 +31,8 @@ function isCategoryTag(value: string): value is CategoryTag {
 
 /**
  * Turn the parse API's jobs into Briefd format cards.
- * Matched jobs become cards; unmatched rows are reported separately so the
- * UI can surface them honestly instead of faking a card.
+ * Fully usable matched jobs become cards. Unmatched rows and rows with a
+ * non-empty deadline that could not be normalized stay in the review worklist.
  */
 export function mapJobsToFormats(jobs: OrchestratedJob[]): MappedPlan {
     const formats: FormatData[] = [];
@@ -40,7 +40,8 @@ export function mapJobsToFormats(jobs: OrchestratedJob[]): MappedPlan {
 
     jobs.forEach((job, index) => {
         const spec = job.specs;
-        if (job.status === "error" || !spec) {
+        const invalidDeadline = job.deadline === null && job.deadlineRaw.trim() !== "";
+        if (job.status === "error" || !spec || invalidDeadline) {
             unmatched.push({
                 id: job.id,
                 source: job.source,
@@ -48,7 +49,9 @@ export function mapJobsToFormats(jobs: OrchestratedJob[]): MappedPlan {
                 format: job.formatName,
                 deadline: job.deadline,
                 deadlineRaw: job.deadlineRaw,
-                error: job.error ?? "No matching spec found",
+                error: invalidDeadline
+                    ? `Deadline "${job.deadlineRaw}" could not be interpreted. Enter a valid date.`
+                    : job.error ?? "No matching spec found",
             });
             return;
         }

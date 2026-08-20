@@ -15,13 +15,25 @@ export interface ManualCorrection {
   fileTypes?: string[];
 }
 
-export function resolveWithSpec(row: UnmatchedRow, specId: string): FormatData {
+function requireCorrectedDeadline(row: UnmatchedRow, deadline: string | null): void {
+  if (row.deadline === null && row.deadlineRaw.trim() !== "" && deadline === null) {
+    throw new Error("Enter a valid deadline for the unrecognized workbook date.");
+  }
+  if (deadline) {
+    const match = deadline.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const parsed = match ? new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))) : null;
+    if (!match || parsed?.toISOString().slice(0, 10) !== deadline) throw new Error("Deadline must be a valid date using YYYY-MM-DD.");
+  }
+}
+
+export function resolveWithSpec(row: UnmatchedRow, specId: string, deadline: string | null = row.deadline): FormatData {
   const spec = mediaSpecs.find((candidate) => candidate.id === specId);
   if (!spec) throw new Error("Choose a verified specification.");
+  requireCorrectedDeadline(row, deadline);
   return sourceBackedFormat(spec, {
     id: row.id,
-    deadline: row.deadline,
-    deadlineRaw: row.deadlineRaw,
+    deadline,
+    deadlineRaw: deadline ?? row.deadlineRaw,
     sourceRow: row.source,
   });
 }
@@ -32,7 +44,7 @@ export function resolveManually(row: UnmatchedRow, input: ManualCorrection): For
   if (!Number.isFinite(input.width) || input.width <= 0 || !Number.isFinite(input.height) || input.height <= 0) {
     throw new Error("Width and height must be positive numbers.");
   }
-  if (input.deadline && !/^\d{4}-\d{2}-\d{2}$/.test(input.deadline)) throw new Error("Deadline must use YYYY-MM-DD.");
+  requireCorrectedDeadline(row, input.deadline);
   return {
     id: row.id,
     categoryTag: input.categoryTag,

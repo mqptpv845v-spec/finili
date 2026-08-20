@@ -43,6 +43,18 @@ describe("Briefd format helpers", () => {
     })).toThrow(/positive/);
   });
 
+  it("requires an unparsed workbook deadline to be corrected before resolution", () => {
+    const invalidDeadlineRow = { ...row, deadline: null, deadlineRaw: "24 Sep" };
+
+    expect(() => resolveWithSpec(invalidDeadlineRow, mediaSpecs[0].id)).toThrow(/valid deadline/);
+    expect(() => resolveManually(invalidDeadlineRow, {
+      publisher: "Agency supplied", formatName: "Custom", width: 320, height: 100,
+      unit: "px", deadline: null, sectionCategory: "Digital Display & High-Impact", categoryTag: "Display",
+    })).toThrow(/valid deadline/);
+    expect(resolveWithSpec(invalidDeadlineRow, mediaSpecs[0].id, "2027-01-04").deadline).toBe("2027-01-04");
+    expect(() => resolveWithSpec(invalidDeadlineRow, mediaSpecs[0].id, "2027-02-31")).toThrow(/valid date/);
+  });
+
   it("builds Monday-first calendars and crosses year boundaries", () => {
     const weeks = buildCalendarMonth("2026-02");
     expect(weeks[0].days[0].isoDate).toBe("2026-01-26");

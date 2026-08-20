@@ -63,4 +63,14 @@ describe("mapJobsToFormats", () => {
         expect(unmatched[0].publisher).toBe("Aftonbladet");
         expect(unmatched[0].error).toContain("Aftonbladet");
     });
+
+    it("keeps a matched row with an unparsed deadline in the review worklist", () => {
+        const job = matchToBrain(mediaPlanRow({ deadline: null, deadlineRaw: "24 Sep" }));
+        const { formats, unmatched } = mapJobsToFormats([job]);
+
+        expect(job.specs).not.toBeNull();
+        expect(formats).toHaveLength(0);
+        expect(unmatched).toHaveLength(1);
+        expect(unmatched[0].error).toContain("could not be interpreted");
+    });
 });

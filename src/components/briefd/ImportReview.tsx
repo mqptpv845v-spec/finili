@@ -37,7 +37,7 @@ function ResolutionForm({ row, onResolve }: { row: UnmatchedRow; onResolve: (for
   const [error, setError] = useState<string | null>(null);
   const submit = () => {
     try {
-      onResolve(mode === "spec" ? resolveWithSpec(row, specId) : resolveManually(row, {
+      onResolve(mode === "spec" ? resolveWithSpec(row, specId, deadline || null) : resolveManually(row, {
         publisher, formatName: name, width: Number(width), height: Number(height), unit,
         deadline: deadline || null, sectionCategory: category, categoryTag: CATEGORY_TAGS[category],
       }));
@@ -46,7 +46,7 @@ function ResolutionForm({ row, onResolve }: { row: UnmatchedRow; onResolve: (for
   };
   return <div className="mt-4 grid gap-3">
     <label className="text-label font-bold">Resolution type<select value={mode} onChange={(e) => setMode(e.target.value as "spec" | "manual")} className="mt-1 block w-full border border-black/15 p-2 bg-white"><option value="spec">Assign a verified Brain spec</option><option value="manual">Enter campaign-specific values</option></select></label>
-    {mode === "spec" ? <label className="text-label font-bold">Verified specification<select value={specId} onChange={(e) => setSpecId(e.target.value)} className="mt-1 block w-full border border-black/15 p-2 bg-white">{mediaSpecs.map((spec) => <option key={spec.id} value={spec.id}>{spec.publisher} — {spec.name}</option>)}</select></label> : <div className="grid sm:grid-cols-2 gap-3">
+    {mode === "spec" ? <div className="grid sm:grid-cols-2 gap-3"><label className="text-label font-bold">Verified specification<select value={specId} onChange={(e) => setSpecId(e.target.value)} className="mt-1 block w-full border border-black/15 p-2 bg-white">{mediaSpecs.map((spec) => <option key={spec.id} value={spec.id}>{spec.publisher} — {spec.name}</option>)}</select></label><label className="text-label font-bold">Deadline<input type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} className="mt-1 block w-full border border-black/15 p-2" /></label></div> : <div className="grid sm:grid-cols-2 gap-3">
       <label className="text-label font-bold">Publisher<input value={publisher} onChange={(e) => setPublisher(e.target.value)} className="mt-1 block w-full border border-black/15 p-2" /></label>
       <label className="text-label font-bold">Format<input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 block w-full border border-black/15 p-2" /></label>
       <label className="text-label font-bold">Width<input type="number" min="0.01" step="any" value={width} onChange={(e) => setWidth(e.target.value)} className="mt-1 block w-full border border-black/15 p-2" /></label>
